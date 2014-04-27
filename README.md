@@ -1,4 +1,3 @@
-
 Periods
 =======
 
@@ -22,7 +21,9 @@ License
 -------
 
 *Periods* is released under the terms of CeCILL license.
-See the files LICENSE.en or LICENCE.fr for more informations.
+This license is compatible with the GNU GPL license.
+
+See the files LICENSE.en or LICENCE.fr for more information.
 
 
 
