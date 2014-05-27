@@ -116,7 +116,7 @@ end function;
 
 Storjohann := function(A,b,prec)
 	d:=Max(DegreeMatrix(A),DegreeMatrix(b)+1);    
-
+ 
 	function MiddleMatrix(M);
 		return  CoefficientsMatrix(M,d,2*d);
 	end function;

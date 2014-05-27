@@ -38,7 +38,7 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
   
   B := PolynomialRing(Kev, dim, "grevlex");
   ft := Polynomial( [ Derivative(c) : c in Coefficients(f) ], Monomials(f) );
-  if "theta" in variant then ft *:= K.1; end if;
+  //if "theta" in variant then ft *:= K.1; end if;
   
   RH := RHnew();
   basis := [];

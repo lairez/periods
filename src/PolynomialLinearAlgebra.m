@@ -362,7 +362,7 @@ intrinsic CyclicEquation(M, v : theta := false) -> Any
   repeat
     vprintf User2 : "%o... ", #A;    
     v := MDer(v) + M*v;
-    if theta then v *:= t; end if;
+    if theta then v *:= (Kt.1 + ipoint) ; end if;
     Append(~A, v); 
     Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
     counter +:= 1;
