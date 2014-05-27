@@ -211,7 +211,7 @@ function easy_order(R)  // This is very questionable
   ParallelSort(~exp, ~vars);
 
   perm := hom< Parent(R[1]) -> Parent(R[1]) | Reverse(vars) >;
-  return < perm(R[1]), perm(R[2]), R[3]>;
+  return < perm(R[1]), perm(R[2])>;
 end function;
 
 function random_order(R)
@@ -220,7 +220,7 @@ function random_order(R)
   ParallelSort(~exp, ~vars);
 
   perm := hom< Parent(R[1]) -> Parent(R[1]) | Reverse(vars) >;
-  return < perm(R[1]), perm(R[2]), R[3]>;
+  return < perm(R[1]), perm(R[2])>;
 end function;
 
 
