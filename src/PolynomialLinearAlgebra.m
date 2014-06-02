@@ -299,10 +299,10 @@ intrinsic CyclicEquation2(M, v : theta := false) -> Any
 
   Kt<t> := BaseRing(M);
   K0 := CoefficientRing(Kt);
-  if Characteristic(K0) eq 0 then
-    error "Not implemented, use with care";  
-  end if;
-  ev := hom< Kt -> K0 |  Random(K0) >;
+  //if Characteristic(K0) eq 0 then
+  //  error "Not implemented, use with care";  
+  //end if;
+  ev := hom< Kt -> K0 |  13 >;
 
   A := [v]; Aev := ChangeRing(v, ev);
   counter := 1;
@@ -344,10 +344,10 @@ intrinsic CyclicEquation(M, v : theta := false) -> Any
 
   Kt<t> := BaseRing(M);
   K0 := CoefficientRing(Kt);
-  if Characteristic(K0) eq 0 then
-    error "Not implemented, use with care";  
-  end if;
-  ipoint :=  Random(K0);
+  //if Characteristic(K0) eq 0 then
+  //  error "Not implemented, use with care";  
+  //end if;
+  ipoint := K0 ! 13;
   ev := hom< Kt -> K0 | 0  >;
   shift := hom< Kt -> Kt | t + ipoint >;
   ishift := hom< Kt -> Kt | t - ipoint >;

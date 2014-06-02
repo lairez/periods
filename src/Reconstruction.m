@@ -116,8 +116,8 @@ intrinsic Deconstruct( a ) -> < >
     p := Deconstruct( [ Denominator(a), Numerator(a) ] );
     return < p[1], < "ratu", p[2] >>;
   elif ISA(Type(a), List) then
-    L := [ Deconstruct(p) : p in a ];
-    return <&cat[ d[1] : d in L ], < "list", [ <#d[1], d[2]> : d in L ] >>;
+    L := [* Deconstruct(p) : p in a *];
+    return <&cat[ d[1] : d in L ], < "list", [* <#d[1], d[2]> : d in L *] >>;
   else
     return < [a], < "self" >> ;
   end if;
@@ -155,10 +155,10 @@ intrinsic Rebuild( a, b ) -> Any
       return 0;
     end if;
   when "mpol":
-    L := Rebuild(a, b[4]);
+    L := Rebuild(a, b[2]);
     if #L gt 0 then
-      R := PolynomialRing(Universe(L), b[2], b[3]);
-      ms := [ Monomial(R, e) : e in b[4] ];
+      R := PolynomialRing(Universe(L), b[3], b[4]);
+      ms := [ Monomial(R, e) : e in b[5] ];
       return Polynomial( L, ms );
     else
       return 0;
@@ -193,7 +193,7 @@ intrinsic RHAddRat(~H, val, point : xkey := false)
   {}
 
   L, S := Explode(Deconstruct(val));
-  key := <S, xkey>;
+  key := <Sprintf("%o", S), xkey>;
   Include(~H`points, point);
   
   if IsDefined(H`rand, key) then
@@ -248,7 +248,7 @@ intrinsic RHAddMod(~H, val, point : xkey := false)
   {}
 
   L, S := Explode(Deconstruct(val));
-  key := <S, xkey>;
+  key := <Sprintf("%o", S), xkey>;
   Include(~H`points, point);
   
   Li := ChangeUniverse(L, Integers());

@@ -16,7 +16,10 @@
  * Calcul de la connection de Gauss-Manin
  */
 
-RKGMfmt := recformat< basis, ebasis, proj, gm >;
+import "/Users/lairez/Applications/lib/magma/PicardFuchs/RhamKoszul.m": TotDiff;
+
+
+RKGMfmt := recformat< basis, ebasis, proj, gm, projcerts, gmcerts >;
 RKprof := recformat< tsyzlm, syzlm >;
 
 
@@ -60,9 +63,21 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
 
     U := InitRK(ev(f) : variant := variant, prof := profile, r := r);
 
-    try
+    //try
       ComputeGM(~U, ev(ft), [ev(p) : p in L], ~gm);
       
+      
+tdiff := function(pol)
+  c := Coefficients(pol, Parent(pol).2);
+  fun := hom<Parent(pol) -> B | [1,1] cat [B.i : i in [1..Rank(B)]]>;
+  return &+[ fun(Derivative(c[i], i+1)) - Derivative(ev(f), i-1)*fun(c[i]) : i in [2..#c] ] ;
+end function;
+
+      for i in [1..#gm`basis] do
+        assert 0 eq (Vector(gm`basis)*ChangeRing(gm`gm, U`ring))[i] - (-ev(ft)*gm`basis[i] + U`fromx(TotDiff(U, gm`gmcerts[i])));
+        assert U`fromx(TotDiff(U, gm`gmcerts[i])) eq tdiff(gm`gmcerts[i]);
+      end for;
+
       if #basis ne #gm`basis then
         vprintf User2 : "Found %o independent integrals. \n", #gm`basis;
         basis := gm`basis;
@@ -70,8 +85,8 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
    
       ComputeProfile(~U);
       profile := U`prof;
-      RHAddRat(~RH, [* gm`gm, gm`proj *], ipoint : xkey := gm`ebasis );
-    catch e
+      RHAddRat(~RH, [* gm`gm, gm`proj, gm`gmcerts, gm`projcerts *], ipoint : xkey := gm`ebasis );
+    /*catch e
       if e`Object eq "r_toosmall" then
         rtoosmall +:= 1;
         if rtoosmall ge 3 then
@@ -80,17 +95,59 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
       else
         error e;
       end if;
-    end try;
+    end try;*/
 
     end if; //vtime
   end while;
 
   IndentPop();
 
-  ret := rec< RKGMfmt | ebasis := gm`ebasis, gm := RH`candidate[1], proj := RH`candidate[2] >;
+  ret := rec< RKGMfmt | ebasis := gm`ebasis, gm := RH`candidate[1], proj := RH`candidate[2], gmcerts := RH`candidate[3], projcerts := RH`candidate[4] >;
 
   return ret, profile;
 end intrinsic;
+
+
+
+// Integration par rapport à la première variable.
+intrinsic GaussManinQ(R, r : modsize := 23, name := "t", variant := {}, prof := rec< RKprof | >) -> Any
+  {}
+
+  RH := RHnew();
+  profile := prof;
+  prime_counter := 0;
+  rtoosmall := 0;
+
+  IndentPush();
+  while not assigned RH`candidate do
+    modulo := RandomPrime(modsize);
+    if modulo in RH`points then continue; end if;    
+    prime_counter +:= 1;
+
+    vprintf User2 : "Computing Picard-Fuchs equation modulo prime number %o (%o).\n  ", prime_counter, modulo;
+
+    //try
+      vtime User2 : rec, profile := GaussManin(R[1], r, [ R[2] ] : modulo := modulo, variant := variant, prof := profile);
+
+      RHAddMod(~RH, [* rec`gm, rec`proj, rec`gmcerts, rec`projcerts *], modulo);
+    /*catch e
+      if e`Object eq "r_toosmall" then
+        rtoosmall +:= 1;
+        if rtoosmall ge 3 then
+          error e;
+        end if;
+      else
+        error Error(e);
+      end if;
+    end try;*/
+  
+  end while;
+  IndentPop();
+
+  return rec`ebasis, RH`candidate, profile;
+end intrinsic;
+
+
 
 
 /********************
