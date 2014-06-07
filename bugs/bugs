@@ -1,0 +1,25 @@
+
+# S := Sum(t^n*Sum(Sum(Binomial(2*n,i)*Binomial(2*n,j)*Multinomial([i,j]), i=n-j..n), j=0..n), n=0..infinity);
+# ser := 4316312*t^5+167970*t^4+6636*t^3+270*t^2+12*t+1
+
+SetVerbose("User2", true);
+
+A<t, u1, u2, u4> := FunctionField(Rationals(), 4);
+R := (-1+u2)*u4*u1^3*u2^3*(u4-1)*(u1-1)/((t+u1*u2*u4*(u4-1)*(-1+u2)*(u1-1))*(t+u1^2*u2*u4*(-1+u2))*(t-u1*u2^2*(u4-1)*(u1-1)));
+
+time deq := Periods(R : r := 2, variant := {"mindeg", "profile"});
+
+
+
+
+# S := Sum(t^n*Sum(Sum(Binomial(3*n,i+j)*Multinomial([i,j]), i=n-j..n), j=0..n), n=0..infinity); 
+# 4316312*t^5+167970*t^4+6636*t^3+270*t^2+12*t+1
+
+SetVerbose("User2", true);
+
+A<t, u1, u3> := FunctionField(Rationals(), 4);
+R := -(u1-1)^3*u1^4*u3*(-1+u3)/((t+u3*u1^2*(u1-1))*(t-u1^2*(-1+u3)*(u1-1))*(t+u1*u3*(u1-1)^2*(-1+u3)));
+time deq := Periods(R : r := 3, variant := {"mindeg", "profile"});
+
+# BUG !
+
