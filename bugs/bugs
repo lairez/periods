@@ -23,3 +23,16 @@ time deq := Periods(R : r := 3, variant := {"mindeg", "profile"});
 
 # BUG !
 
+
+
+
+
+SetVerbose("User2", true);
+SetAssertions(2);
+
+A<t,x,y,z> := FunctionField(Rationals(), 4); 
+f1 := 1/(x^4+y^4+z^4+1+4*t*x*y*z);
+Peridos(f1);
+
+# BUG ! Never terminates. I suspect Storj solver.
+
