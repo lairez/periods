@@ -75,7 +75,8 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
       if e`Object eq "r_toosmall" then
         rtoosmall +:= 1;
         if rtoosmall ge 3 then
-          error Error(e);
+          vprintf User2 : "r is too small, raising error";
+          error Error("r_toosmall");
         end if;
       else
         error e;
@@ -123,16 +124,18 @@ intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := 
 
       RHAddMod(~RH, deq, modulo);
     catch e
+      vprintf User2 : e`Object;
       if e`Object eq "r_toosmall" then
         rtoosmall +:= 1;
         if rtoosmall ge 3 then
-          error e;
+          vprintf User2 : "r is too small, raising error";        
+          error Error("r_toosmall");
         end if;
       else
-        error Error(e);
+        error e;
       end if;
     end try;
-  
+      
   end while;
   IndentPop();
 
@@ -199,6 +202,8 @@ function prepare_fraction(R)
   fsf := &*[ ClearDenominators(p[1]) : p in facts ];         // Notre numérateur sans carré.
   deg := Maximum([ p[2] : p in facts ]);
 
+  vprintf User2 : "The square-free part of the denominator has degree %o.", Degree(fsf);  
+
   return <fsf, Numerator( fsf^deg*Rh )>;
 end function;
 
@@ -256,9 +261,10 @@ intrinsic Periods(f : r := 1, variant := {}, onlyprep := false) -> Any
       deq := PicardFuchs(R, r : variant := variant);
     catch e
       if e`Object eq "r_toosmall" then
+        vprintf User2 : "Increasing r";        
         r +:= 1;
       else
-        error e;
+        error e`Object;
       end if;
     end try;
   until assigned deq;

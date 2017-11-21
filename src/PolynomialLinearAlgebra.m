@@ -331,7 +331,7 @@ end function;
 // May be buggy though
 // input : M a matrix with coefficients in k(t)
 //         v a vector with coefficients in k(t)
-//      M represents a connection D on the spave k(t)^n
+//      M represents a connection D on the space k(t)^n
 // output : the minimal operator L(t, D) such that L(v) = 0
 intrinsic CyclicEquation(M, v : theta := false) -> Any
   {Returns the minimum annihilating differential operator.}
