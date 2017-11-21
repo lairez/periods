@@ -2,12 +2,12 @@
  * by the rules of distribution of free software.  You can use, modify or
  * redistribute the software under the terms of the CeCILL license as
  * circulated by CEA, CNRS and INRIA at the following URL
- * 
+ *
  *     www.cecill.info
- * 
+ *
  *  Author: Alin Bostan (2013)
  *  Modified by: Pierre Lairez (2014)
- *  
+ *
  **/
 
 
@@ -25,17 +25,17 @@ end function;
 
 function ValuationMatrix(M);
     return mapFun(func<x|Valuation(x)>, M);
-end function;    
+end function;
 
 function DegreeMatrix(M);
     return Max(ElementToSequence(mapFun(func<x|Degree(x)>, M)));
 end function;
 
-function CoefficientsMatrix(M,n,m);  
+function CoefficientsMatrix(M,n,m);
     k:=BaseRing(BaseRing(Parent(M)));
-    U<t>:=PolynomialRing(k); 
+    U<t>:=PolynomialRing(k);
     return mapFun(func<x| U![Coefficient(x,i) : i in [n..m-1]]>, M);
-end function;   
+end function;
 
 function DerivativeMat(M);
     return mapFun(func<x|Derivative(x)>, M);
@@ -43,7 +43,7 @@ end function;
 
 
 //---------------------------------------------------
-// ring, field and random generation used 
+// ring, field and random generation used
 // in the tests of correctness and timings
 //---------------------------------------------------
 
@@ -109,64 +109,64 @@ end function;
 
 
 //---------------------------------------------------
-// compute power series expansion of 
+// compute power series expansion of
 // A^(-1)*b mod t^prec
 //---------------------------------------------------
 
 
 Storjohann := function(A,b,prec)
-	d:=Max(DegreeMatrix(A),DegreeMatrix(b)+1);    
- 
+	d:=Max(DegreeMatrix(A),DegreeMatrix(b)+1);
+
 	function MiddleMatrix(M);
 		return  CoefficientsMatrix(M,d,2*d);
 	end function;
-	
+
 	k:=BaseRing(BaseRing(Parent(A)));
 	U<t>:=PolynomialRing(k);
 	L<t>:=LaurentSeriesRing(k,d+1);
 	RFF<t>:=RationalFunctionField(k);
-	P:=U.1^d;             
-// s is chosen such that d*2^s > prec	     
+	P:=U.1^d;
+// s is chosen such that d*2^s > prec
 	s:=Ceiling(Log(2,prec/d));
-//	print "s =", s;
-		
+//	print "s =", s; 
+
 //	RFF<t>:=RationalFunctionField(k);
-//    C0b:=CoefficientsMatrix(Matrix(L,Matrix(RFF,A)^(-1)),0,d);  
+//    C0b:=CoefficientsMatrix(Matrix(L,Matrix(RFF,A)^(-1)),0,d);
 //tt:=Cputime();
-       C0:=CoefficientsMatrix(Matrix(L,A)^(-1),0,d);  
+       C0:=CoefficientsMatrix(Matrix(L,A)^(-1),0,d);
        C1:=-CoefficientsMatrix(C0*P*CoefficientsMatrix(A*C0,d,2*d),d,2*d) ;
 //print("initial conditions"), Cputime()-tt;
 
-//high order lifting 
-//tt:=Cputime();	
+//high order lifting
+//tt:=Cputime();
 	CC:=[C0,C1];
 	for k in [2..s-1] do
 	    CC[2^k-2+1]:=- MiddleMatrix((CC[2^(k-1)-2+1]+CC[2^(k-1)-1+1]*P)*
-				MiddleMatrix(A*CC[2^(k-1)-2+1])); 
+				MiddleMatrix(A*CC[2^(k-1)-2+1]));
 		CC[2^k-1+1]:=- MiddleMatrix((CC[2^(k-1)-2+1]+CC[2^(k-1)-1+1]*P)*
-				MiddleMatrix(A*CC[2^(k-1)-1+1]));			
-	end for;			  
-	
+				MiddleMatrix(A*CC[2^(k-1)-1+1]));
+	end for;
+
 	init:=(CC[1]+P*CC[2])*b;
 	PP:=HorizontalJoin(CoefficientsMatrix(init,0,d), CoefficientsMatrix(init,d,2*d));
-	Mat:=0;  
+	Mat:=0;
 //print("high order lifting"), Cputime()-tt;
 
 // Generalized Keller-Gehrig
-//tt:=Cputime();	
-	for K in [2..s] do           
-		Mat:=-MiddleMatrix((CC[2^(K-1)-2+1]+CC[2^(K-1)-1+1]*P) * MiddleMatrix(A*PP)); 
+//tt:=Cputime();
+	for K in [2..s] do
+		Mat:=-MiddleMatrix((CC[2^(K-1)-2+1]+CC[2^(K-1)-1+1]*P) * MiddleMatrix(A*PP));
 	//	print Mat;
-		PP:=HorizontalJoin(PP,Mat); 
-	end for;      
+		PP:=HorizontalJoin(PP,Mat);
+	end for;
 //print("generalized Keller-Gehrig"), Cputime()-tt;
 
 	//[Valuation( U!Coefficients(y[J,1])  -  &+[PP[J,K]*P^(K-1) : K in [1..s+1]]) : J in [1..n]];
 
-//tt:=Cputime();	
+//tt:=Cputime();
 	z:=&+[ColumnSubmatrix(PP,K,1)*P^(K-1) : K in [1..NumberOfColumns(PP)]];
 //print("conclude"), Cputime()-tt;
-	
+
 	return z;
 end function;
 
@@ -182,21 +182,21 @@ intrinsic SolveByStorjohann(A,b) -> Any
 	k:=BaseRing(BaseRing(Parent(A)));
 	U<t>:=PolynomialRing(k);
 	n:=Ncols(A);
-   	d:=Max(DegreeMatrix(A),DegreeMatrix(b)+1); 
-	prec:=2*d*n;
-//	time 
-        z:= Storjohann(A,b,prec);  
-	L<t>:=LaurentSeriesRing(k,prec);   
+   	d:=Max(DegreeMatrix(A),DegreeMatrix(b)+1);
+	prec:=2*d*n + 3;
+//	time
+        z:= Storjohann(A,b,prec);
+	L<t>:=LaurentSeriesRing(k,prec);
 	Stsol:=Matrix(L,z);
 //	tt:=Cputime();
 	bool, pad:=PadeApproximant(&+[Stsol[k,1] : k in [1..n]], prec, prec div 2 - 1, prec div 2);
 //	print("Pade approximants"), Cputime()-tt;
 //	tt:=Cputime();
-//	time 
+//	time
   denomSol:=Denominator(pad);
-//	time 
+//	time
   numerSol:=Eltseq(Stsol*denomSol);
-//	time 
+//	time
   RES:=Matrix(n,1,[U!Coefficients(N)/denomSol : N in numerSol]);
 //	time res:=Matrix(RationalFunctionField(k),n,1,[U!Coefficients(N) : N in numerSol]);
 //	time RES:=1/denomSol*res;
@@ -233,7 +233,7 @@ CVMConstruction := function(M,q,v,r)
 end function;
 
 /*
-the coefficients of the differential equation 
+the coefficients of the differential equation
 that cancels 1/r * v Y for any solution Y' = 1/q * M Y
 are given by the vector
 u*P^(-1) * diag(1/(q*r)^n , 1/(q*r)^(n-1) , ... , 1/(q*r))
@@ -244,9 +244,9 @@ CVMResolution := function(P,u,qr)
   FracK := FieldOfFractions(K);
   n := NumberOfRows(P);
   resResol := Transpose(SolveByStorjohann(Transpose(P),Transpose(u)));
-  if resResol * ChangeRing(P,FracK) ne ChangeRing(u,FracK) 
-    then 
-      print("singular matrix P"); 
+  if resResol * ChangeRing(P,FracK) ne ChangeRing(u,FracK)
+    then
+      print("singular matrix P");
       return P;
     else return Matrix(1,n,[resResol[1,i]/qr^(n+1-i): i in [1..n]]);
   end if;
@@ -262,7 +262,7 @@ end function;
 
 
 //---------------------------------------------------
-// computation of P and delta^n u 
+// computation of P and delta^n u
 // with balanced vector-matrix product
 //---------------------------------------------------
 
@@ -296,7 +296,7 @@ CVMConstructionBalanced := function(M,q,v,r)
     for row in [1..k] do
       for i in [row..NumberOfRows(res)] do
         for j in [1..NumberOfColumns(res)] do
-          res[i,j] := res[i,j] + 
+          res[i,j] := res[i,j] +
             K![Coefficient(A[i-row+1,j],l) : l in [(row-1)*D..row*D-1]];
         end for;
       end for;
@@ -364,4 +364,3 @@ DBZ := function(Minput)
   end for;
   return <P,M>;
 end function;
-

@@ -2,9 +2,9 @@
  * by the rules of distribution of free software.  You can use, modify or
  * redistribute the software under the terms of the CeCILL license as
  * circulated by CEA, CNRS and INRIA at the following URL
- * 
+ *
  *     www.cecill.info
- * 
+ *
  *  Author: Pierre Lairez (2014)
  *
  **/
@@ -90,7 +90,7 @@ end intrinsic;
 
 intrinsic EchelonForm( L :: [ ModMPolElt ] ) -> []
   { Reduced row echelon form for modules multivariate polynomials with POT order. }
-  
+
   if #L gt 0 then
     IndentPush();
     Ls := [ [ p[i] : p in L ] : i in [1..Rank(Universe(L))] ];
@@ -100,11 +100,11 @@ intrinsic EchelonForm( L :: [ ModMPolElt ] ) -> []
       Append(~mats, mat);
       Append(~Vs, V);
     end for;
-    
+
     mat := HorizontalJoin(mats);
     vprintf User1 : "Reducing a %o by %o matrix over %m... ", NumberOfRows(mat), NumberOfColumns(mat), BaseRing(mat);
     vtime User1 : mat := EchelonForm(mat);
-    
+
     indices := [];
     acc := 1;
     rs := [];
@@ -112,9 +112,9 @@ intrinsic EchelonForm( L :: [ ModMPolElt ] ) -> []
       Append(~rs, RowSequence(Submatrix(mat, 1, acc, #L, #Vs[i])));
       acc +:= #Vs[i];
     end for;
-    
+
     L0 := [ Universe(L) | [ Polynomial( rs[i,j], Vs[i] ) : i in [1..#Ls] ] : j in [1..#L] ];
-    
+
     RemoveTrailingZeros(~L0);
 
     IndentPop();
@@ -155,7 +155,7 @@ end intrinsic;
 
 intrinsic RowSpaceMatrix( L :: [] ) -> [], Mtrx
   {}
-  
+
   mat, V := Linearize(L : post := #L);
   mat := EchelonForm(mat);
   rk := #[ j : j in RankProfile(mat) | j le #V ];
@@ -176,14 +176,14 @@ intrinsic EchelonForm_p( L0 :: [] ) -> []
     while #L gt 0 and L[#L] eq 0 do
       Prune(~L);
     end while;
-    
+
     if i gt #L then
       break;
     end if;
 
     L[i] /:= LeadingCoefficient(L[i]);
     m := LeadingMonomial(L[i]);
-   
+
     for k := 1 to i-1 do
       L[k] -:= MonomialCoefficient(L[k], m)*L[i];
     end for;
@@ -201,7 +201,7 @@ end intrinsic;
 
 // M doit déjà être sous forme échelon (réduite ou non)
 intrinsic LinNormalForm_p( L0 :: [ RngMPolElt ], M :: [ RngMPolElt ], reduce :: BoolElt ) -> []
-  {The same as LinNormalForm but without polynomials to matrices conversion.}  
+  {The same as LinNormalForm but without polynomials to matrices conversion.}
 
   L := L0;
   for j := 1 to #M do
@@ -223,7 +223,7 @@ end intrinsic;
 
 // M doit déjà être sous forme échelon (réduite ou non)
 intrinsic LinNormalForm_p( L0 :: [ ModMPolElt ], M :: [ ModMPolElt ], reduce :: BoolElt ) -> []
-  {The same as LinNormalForm but without polynomials to matrices conversion.}  
+  {The same as LinNormalForm but without polynomials to matrices conversion.}
 
   L := L0;
   for j := 1 to #M do
@@ -249,10 +249,10 @@ intrinsic RelationsMatrix_p( L0 :: [] ) -> Mtrx
   {}
 
   L := L0;
-  
+
   indices := [ i : i in [1..#L] | L[i] ne 0];
   rels := IdentityMatrix(CoefficientRing(Universe(L0)), #L) ;
- 
+
   for i := 1 to #L do
     if #indices eq 0 then
       break;
@@ -265,7 +265,7 @@ intrinsic RelationsMatrix_p( L0 :: [] ) -> Mtrx
       L[indices[k]] -:= c/c0*L[indices[j]];
       AddRow(~rels, -c/c0, indices[j], indices[k]);
     end for;
-    
+
     Exclude(~indices, indices[j]);
 
     indices := [ i : i in indices | L[i] ne 0 ];
@@ -292,7 +292,7 @@ end intrinsic;
 MDer := func< m | Matrix(BaseRing(m), NumberOfRows(m), NumberOfColumns(m), [Derivative(p) : p in Eltseq(m)]) >;
 
 // Old version
-intrinsic CyclicEquation2(M, v : theta := false) -> Any
+intrinsic CyclicEquation(M, v : theta := false) -> Any
   {}
 
   n := NumberOfRows(M);
@@ -300,7 +300,7 @@ intrinsic CyclicEquation2(M, v : theta := false) -> Any
   Kt<t> := BaseRing(M);
   K0 := CoefficientRing(Kt);
   if Characteristic(K0) eq 0 then
-    error "Not implemented, use with care";  
+    error "Not implemented, use with care";
   end if;
   ev := hom< Kt -> K0 |  Random(K0) >;
 
@@ -309,13 +309,13 @@ intrinsic CyclicEquation2(M, v : theta := false) -> Any
   repeat
     v := MDer(v) + M*v;
     if theta then v *:= t; end if;
-    Append(~A, v); 
+    Append(~A, v);
     Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
     counter +:= 1;
   until Rank(Aev) lt #A;
 
   m := Transpose(HorizontalJoin(Reverse(A)));
-  
+
   return Reverse(Eltseq(Basis(NullSpace(m))[1]));
 end intrinsic;
 
@@ -333,7 +333,7 @@ end function;
 //         v a vector with coefficients in k(t)
 //      M represents a connection D on the space k(t)^n
 // output : the minimal operator L(t, D) such that L(v) = 0
-intrinsic CyclicEquation(M, v : theta := false) -> Any
+intrinsic CyclicEquation2(M, v : theta := false) -> Any
   {Returns the minimum annihilating differential operator.}
 
   n := NumberOfRows(M);
@@ -345,13 +345,13 @@ intrinsic CyclicEquation(M, v : theta := false) -> Any
   Kt<t> := BaseRing(M);
   K0 := CoefficientRing(Kt);
   if Characteristic(K0) eq 0 then
-    error "Not implemented, use with care";  
+    error "Not implemented, use with care";
   end if;
   ipoint :=  Random(K0);
   ev := hom< Kt -> K0 | 0  >;
   shift := hom< Kt -> Kt | t + ipoint >;
   ishift := hom< Kt -> Kt | t - ipoint >;
-  
+
 
   M := ChangeRing(M, shift);
   v := ChangeRing(v, shift);
@@ -360,14 +360,14 @@ intrinsic CyclicEquation(M, v : theta := false) -> Any
   counter := 1;
   vprintf User2 : "order... ";
   repeat
-    vprintf User2 : "%o... ", #A;    
+    vprintf User2 : "%o... ", #A;
     v := MDer(v) + M*v;
     if theta then v *:= (Kt.1 + ipoint) ; end if;
-    Append(~A, v); 
+    Append(~A, v);
     Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
     counter +:= 1;
   until Rank(Aev) lt #A;
-  vprintf User2 : "ok\.";
+  vprintf User2 : "ok\.  ";
 
   rp := RankProfile(EchelonForm(Transpose(Aev)));
   M := Submatrix(HorizontalJoin(Prune(A)), rp, [1..#A-1]);
@@ -377,14 +377,16 @@ intrinsic CyclicEquation(M, v : theta := false) -> Any
   Mpol := mapFun(func<x | Numerator(x*den)>, M);
   vpol := mapFun(func<x | Numerator(x*den)>, v);
 
+  storjsol := SolveByStorjohann(Mpol, vpol);
+
+  // Check does not pass, see bug/bugs
+  error Error([*storjsol, vpol, Mpol*]);
+  assert Mpol*ClearDenominator(storjsol) eq Denominator(storjsol)*vpol;
+  vprintf User2 : "Check ok";
+  ////////////
+
   sol := Eltseq(-SolveByStorjohann(Mpol, vpol));
   sol := [ ishift(Numerator(p))/ishift(Denominator(p)) : p in sol ];
 
   return Append(sol,1);
 end intrinsic;
-
-
-
-
-
-

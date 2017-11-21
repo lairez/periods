@@ -2,9 +2,9 @@
  * by the rules of distribution of free software.  You can use, modify or
  * redistribute the software under the terms of the CeCILL license as
  * circulated by CEA, CNRS and INRIA at the following URL
- * 
+ *
  *     www.cecill.info
- * 
+ *
  *  Author: Pierre Lairez (2014)
  *
  **/
@@ -29,23 +29,23 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
   A := Parent(f);
   K := CoefficientRing(A);
   dim := Rank(A);
-  
+
   if modulo eq 0 then
     Kev := CoefficientRing(K);
   else
     Kev := GF(modulo);
   end if;
-  
+
   B := PolynomialRing(Kev, dim, "grevlex");
   ft := Polynomial( [ Derivative(c) : c in Coefficients(f) ], Monomials(f) );
   //if "theta" in variant then ft *:= K.1; end if;
-  
+
   RH := RHnew();
   basis := [];
   profile := prof;
 
   rtoosmall := 0;
-  
+
   point_counter := 0;
   while not assigned RH`candidate do
     ipoint := Random(Kev);
@@ -54,7 +54,7 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
 
     vprintf User2 : "Computing connexion at point number %o (%o)... ", point_counter, ipoint ;
     vtime User2 :  if true then
- 
+
     evc := hom< K -> Kev | ipoint >;
     ev := hom< A -> B | evc, [B.i : i in [1..dim]] >;
 
@@ -62,12 +62,12 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
 
     try
       ComputeGM(~U, ev(ft), [ev(p) : p in L], ~gm);
-      
+
       if #basis ne #gm`basis then
         vprintf User2 : "Found %o independent integrals. \n", #gm`basis;
         basis := gm`basis;
       end if;
-   
+
       ComputeProfile(~U);
       profile := U`prof;
       RHAddRat(~RH, [* gm`gm, gm`proj *], ipoint : xkey := gm`ebasis );
@@ -110,7 +110,7 @@ intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := 
   IndentPush();
   while not assigned RH`candidate do
     modulo := RandomPrime(modsize);
-    if modulo in RH`points then continue; end if;    
+    if modulo in RH`points then continue; end if;
     prime_counter +:= 1;
 
     vprintf User2 : "Computing Picard-Fuchs equation modulo prime number %o (%o).\n  ", prime_counter, modulo;
@@ -118,8 +118,8 @@ intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := 
     try
       vtime User2 : rec, profile := GaussManin(R[1], r, [ R[2] ] : modulo := modulo, variant := variant, prof := profile);
       vprintf User2 : "Computing linear relation... ";
-      
-      vtime User2 : deq := CyclicEquation(rec`gm, rec`proj : theta := "theta" in variant); 
+
+      vtime User2 : deq := CyclicEquation(rec`gm, rec`proj : theta := "theta" in variant);
       vprintf User2 : "Found an equation of order %o and degree %o.\n", #deq-1, Maximum([Maximum([Degree(Numerator(p)), Degree(Denominator(p))]) : p in deq]);
 
       RHAddMod(~RH, deq, modulo);
@@ -128,14 +128,14 @@ intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := 
       if e`Object eq "r_toosmall" then
         rtoosmall +:= 1;
         if rtoosmall ge 3 then
-          vprintf User2 : "r is too small, raising error";        
+          vprintf User2 : "r is too small, raising error";
           error Error("r_toosmall");
         end if;
       else
         error e;
       end if;
     end try;
-      
+
   end while;
   IndentPop();
 
@@ -154,7 +154,7 @@ function minimize_degree(f : rounds := 3, concurrent := 10)
   current := Degree(Denominator(f));
   start := current;
   vprintf User2 : "Degree minimisation : from %o to  ", current;
-  
+
   counter := 0;
   while counter le rounds do
     vprintf User2 : ".";
@@ -179,7 +179,7 @@ function minimize_degree(f : rounds := 3, concurrent := 10)
   end while;
 
   vprintf User2 : "%o\n", current;
-  
+
   if current eq start then
     return f, ScalarMatrix(Integers(), Rank(A), 1);
   else
@@ -202,7 +202,7 @@ function prepare_fraction(R)
   fsf := &*[ ClearDenominators(p[1]) : p in facts ];         // Notre numérateur sans carré.
   deg := Maximum([ p[2] : p in facts ]);
 
-  vprintf User2 : "The square-free part of the denominator has degree %o.", Degree(fsf);  
+  vprintf User2 : "The square-free part of the denominator has degree %o.", Degree(fsf);
 
   return <fsf, Numerator( fsf^deg*Rh )>;
 end function;
@@ -210,7 +210,7 @@ end function;
 function easy_order(R)  // This is very questionable
   L := Monomials(Polynomial([Derivative(p) : p in Coefficients(R[1])], Monomials(R[1])));
   _, k := Minimum([ Sort(Exponents(p)) : p in Monomials(Polynomial([Derivative(p) : p in Coefficients(R[1])], Monomials(R[1])))]);
-  
+
   vars := [Parent(R[1]).i : i in [1..Rank(Parent(R[1]))]];
   exp := [ &+[ Exponents(p)[i] : p in L] : i in [1..#vars] ];//Exponents(L[k]);
   ParallelSort(~exp, ~vars);
@@ -245,7 +245,7 @@ intrinsic Periods(f : r := 1, variant := {}, onlyprep := false) -> Any
     vprintf User2 : "Integrating %o \n", g;
     vprintf User2 : "Change of variables:\n %o \n", mat;
   end if;
-  
+
   R := prepare_fraction(g);
   if "randord" in variant then
     // Extremely questionable
@@ -261,7 +261,7 @@ intrinsic Periods(f : r := 1, variant := {}, onlyprep := false) -> Any
       deq := PicardFuchs(R, r : variant := variant);
     catch e
       if e`Object eq "r_toosmall" then
-        vprintf User2 : "Increasing r";        
+        vprintf User2 : "Increasing r";
         r +:= 1;
       else
         error e`Object;
@@ -295,5 +295,4 @@ intrinsic Diagonal(f : r := 1, variant := {}, onlyprep := false) -> Any
   ft := Evaluate(Numerator(f), chvar) / Evaluate(Denominator(f), chvar) / &*vars;
 
   return Periods(ft : r := r, variant := variant, onlyprep := onlyprep);
-end intrinsic;  
-
+end intrinsic;
