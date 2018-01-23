@@ -30,8 +30,9 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
   K := CoefficientRing(A);
   dim := Rank(A);
 
+  ipoint := 100;
   if modulo eq 0 then
-    Kev := CoefficientRing(K);
+      Kev := CoefficientRing(K);
   else
     Kev := GF(modulo);
   end if;
@@ -48,7 +49,11 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
 
   point_counter := 0;
   while not assigned RH`candidate do
-    ipoint := Random(Kev);
+    if modulo eq 0 then
+        ipoint := ipoint + 1;
+    else
+        ipoint := Random(Kev);
+    end if;
     if ipoint in RH`points then continue; end if;
     point_counter +:= 1;
 
@@ -92,6 +97,99 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
 
   return ret, profile;
 end intrinsic;
+
+
+intrinsic GaussManinSys(f, r, L : modulo := 0, modsize := 23, variant := {}, prof := rec< RKprof | > ) -> Any, Any, Any
+  {}
+
+  if modulo gt 0 then
+      return GaussManin(f, r, L : modulo := modulo, variant := variant, prof := prof);
+  end if;
+
+  RH := RHnew();
+  profile := prof;
+  prime_counter := 0;
+  rtoosmall := 0;
+  ebasis := 0;
+
+  IndentPush();
+  while not assigned RH`candidate do
+    modp := RandomPrime(modsize);
+    if modp in RH`points then continue; end if;
+    prime_counter +:= 1;
+
+    vprintf User2 : "Computing Gauss-Manin connection modulo prime number %o (%o)...  ", prime_counter, modp;
+
+    try
+      vtime User2 : rec, profile := GaussManin(f, r, L : modulo := modp, variant := variant, prof := profile);
+
+      RHAddMod(~RH, [* rec`gm, rec`proj *], modp : xkey := rec`ebasis);
+      ebasis := rec`ebasis;
+    catch e
+      vprintf User2 : e`Object;
+      if e`Object eq "r_toosmall" then
+        rtoosmall +:= 1;
+        if rtoosmall ge 3 then
+          vprintf User2 : "r is too small, raising error";
+          error Error("r_toosmall");
+        end if;
+      else
+        error e;
+      end if;
+    end try;
+
+  end while;
+  IndentPop();
+
+  return ebasis, RH`candidate[1], RH`candidate[2];
+end intrinsic;
+
+
+
+
+intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := rec< RKprof | >) -> Any
+  {}
+
+  RH := RHnew();
+  profile := prof;
+  prime_counter := 0;
+  rtoosmall := 0;
+
+  IndentPush();
+  while not assigned RH`candidate do
+    modulo := RandomPrime(modsize);
+    if modulo in RH`points then continue; end if;
+    prime_counter +:= 1;
+
+    vprintf User2 : "Computing Picard-Fuchs equation modulo prime number %o (%o).\n  ", prime_counter, modulo;
+
+    try
+      vtime User2 : rec, profile := GaussManin(R[1], r, [ R[2] ] : modulo := modulo, variant := variant, prof := profile);
+      vprintf User2 : "Computing linear relation... ";
+
+      vtime User2 : deq := CyclicEquation(rec`gm, rec`proj : theta := "theta" in variant);
+      vprintf User2 : "Found an equation of order %o and degree %o.\n", #deq-1, Maximum([Maximum([Degree(Numerator(p)), Degree(Denominator(p))]) : p in deq]);
+
+      RHAddMod(~RH, deq, modulo);
+    catch e
+      vprintf User2 : e`Object;
+      if e`Object eq "r_toosmall" then
+        rtoosmall +:= 1;
+        if rtoosmall ge 3 then
+          vprintf User2 : "r is too small, raising error";
+          error Error("r_toosmall");
+        end if;
+      else
+        error e;
+      end if;
+    end try;
+
+  end while;
+  IndentPop();
+
+  return RH`candidate, profile;
+end intrinsic;
+
 
 
 /********************
