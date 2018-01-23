@@ -380,9 +380,10 @@ intrinsic CyclicEquation2(M, v : theta := false) -> Any
   storjsol := SolveByStorjohann(Mpol, vpol);
 
   // Check does not pass, see bug/bugs
-  error Error([*storjsol, vpol, Mpol*]);
+  //error Error([*storjsol, vpol, Mpol*]);
+  vprintf User2 : "Checking... ";
   assert Mpol*ClearDenominator(storjsol) eq Denominator(storjsol)*vpol;
-  vprintf User2 : "Check ok";
+  vprintf User2 : "Check ok.  ";
   ////////////
 
   sol := Eltseq(-SolveByStorjohann(Mpol, vpol));
