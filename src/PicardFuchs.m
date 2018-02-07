@@ -98,7 +98,7 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
   return ret, profile;
 end intrinsic;
 
-
+/*
 intrinsic GaussManinSys(f, r, L : modulo := 0, modsize := 23, variant := {}, prof := rec< RKprof | > ) -> Any, Any, Any
   {}
 
@@ -143,53 +143,52 @@ intrinsic GaussManinSys(f, r, L : modulo := 0, modsize := 23, variant := {}, pro
 
   return ebasis, RH`candidate[1], RH`candidate[2];
 end intrinsic;
+*/
+
+/***********************
+ * Linear homotopies
+ */
 
 
 
+intrinsic
+    GaussManinLin(f0, f1, basis : r := 1, variant := {}) -> Any, Any {}
 
-intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := rec< RKprof | >) -> Any
-  {}
+    RH := RHnew();
 
-  RH := RHnew();
-  profile := prof;
-  prime_counter := 0;
-  rtoosmall := 0;
+    ipoint := CoefficientRing(Parent(f0)) ! 100;
+    point_counter := 0;
 
-  IndentPush();
-  while not assigned RH`candidate do
-    modulo := RandomPrime(modsize);
-    if modulo in RH`points then continue; end if;
-    prime_counter +:= 1;
+    IndentPush();
+    while not assigned RH`candidate do
+        ipoint +:= 1;
+        point_counter +:= 1;
+        vprintf User2 : "Computing connexion at point number %o (%o)... ", point_counter, ipoint ;
 
-    vprintf User2 : "Computing Picard-Fuchs equation modulo prime number %o (%o).\n  ", prime_counter, modulo;
+      //try
+        U := InitRK((1-ipoint)*f0 + ipoint*f1 : variant := variant, r := r);
+        vtime User2 : ComputeGM(~U, f1-f0, basis, ~gm);
 
-    try
-      vtime User2 : rec, profile := GaussManin(R[1], r, [ R[2] ] : modulo := modulo, variant := variant, prof := profile);
-      vprintf User2 : "Computing linear relation... ";
+        mat := gm`proj^(-1)*gm`gm*gm`proj;
 
-      vtime User2 : deq := CyclicEquation(rec`gm, rec`proj : theta := "theta" in variant);
-      vprintf User2 : "Found an equation of order %o and degree %o.\n", #deq-1, Maximum([Maximum([Degree(Numerator(p)), Degree(Denominator(p))]) : p in deq]);
+        RHAddRat(~RH, mat, ipoint : xkey := gm`ebasis);
+      /*catch e
+          if e`Object eq "r_toosmall" then
+              rtoosmall +:= 1;
+              if rtoosmall ge 9 then
+                  vprintf User2 : "r is too small, raising error";
+                  error Error("r_toosmall");
+              end if;
+          else
+              error e;
+          end if;
+      end try;*/
+    end while;
+    IndentPop();
 
-      RHAddMod(~RH, deq, modulo);
-    catch e
-      vprintf User2 : e`Object;
-      if e`Object eq "r_toosmall" then
-        rtoosmall +:= 1;
-        if rtoosmall ge 3 then
-          vprintf User2 : "r is too small, raising error";
-          error Error("r_toosmall");
-        end if;
-      else
-        error e;
-      end if;
-    end try;
+    return RH`candidate;
 
-  end while;
-  IndentPop();
-
-  return RH`candidate, profile;
 end intrinsic;
-
 
 
 /********************

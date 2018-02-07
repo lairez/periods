@@ -2,9 +2,9 @@
  * by the rules of distribution of free software.  You can use, modify or
  * redistribute the software under the terms of the CeCILL license as
  * circulated by CEA, CNRS and INRIA at the following URL
- * 
+ *
  *     www.cecill.info
- * 
+ *
  *  Author: Pierre Lairez (2014)
  *
  **/
@@ -21,7 +21,7 @@
 //( a :: RngMPolElt, B :: [RngMPolElt], vars :: [RngMPolElt], deg :: RngIntElt )
 // Renvoie l'ensemble des monômes de degré deg, produit de a par un monôme en
 // vars mais pas divisible par l'un des monômes de B.
-function DiffStairs( a, B, vars, deg ) 
+function DiffStairs( a, B, vars, deg )
   if deg lt Degree(a) then
     return { Parent(a) | };
   elif deg eq Degree(a) then
@@ -36,7 +36,7 @@ end function;
 
 // Renvoie l'ensemble des monômes de degré deg multiples de l'un des monômes de
 // A mais pas divisible par l'un des monômes de B.
-function BasisAtDegree( A , B, vars, deg ) 
+function BasisAtDegree( A , B, vars, deg )
   ret := [ Universe(A) | ];
   BB := B;
 
@@ -87,7 +87,7 @@ RKrecformat := recformat<
 
 RKprof := recformat< tsyzlm, syzlm >;
 
-intrinsic InitRK( f :: RngMPolElt : variant := { }, der := 1, r := 1, prof := rec< RKprof | > ) -> Rec
+intrinsic InitRK( f :: RngMPolElt : variant := { }, r := 1, prof := rec< RKprof | > ) -> Rec
   {}
 
   U := rec<RKrecformat |
@@ -104,7 +104,7 @@ intrinsic InitRK( f :: RngMPolElt : variant := { }, der := 1, r := 1, prof := re
 
   n := U`dim;
   R := PolynomialRing(CoefficientRing(U`ring), n+2, "grevlex");
-  
+
   if assigned prof`syzlm then U`profmode := "get";
   else
     if "profile" in variant then U`profmode := "set";
@@ -113,13 +113,13 @@ intrinsic InitRK( f :: RngMPolElt : variant := { }, der := 1, r := 1, prof := re
   end if;
 
   if not "altord" in variant then
-    AssignNames(~R, [ "u", "v" ] cat [ "x" cat IntegerToString(i-1) : i in [1..U`dim] ] ); 
-    u := R.1; v := R.2;  
+    AssignNames(~R, [ "u", "v" ] cat [ "x" cat IntegerToString(i-1) : i in [1..U`dim] ] );
+    u := R.1; v := R.2;
     tox := hom< U`ring -> R | [ R.(i+2) : i in [1..n]] >;
     fromx := hom< R -> U`ring | [U`ring | 1, 0] cat [ U`ring.i : i in [1..n]]   >;
     U`vshift := 2;
   else
-    AssignNames(~R, [ "x" cat IntegerToString(i-1) : i in [1..n] ] cat [ "u", "v" ]); 
+    AssignNames(~R, [ "x" cat IntegerToString(i-1) : i in [1..n] ] cat [ "u", "v" ]);
     u := R.(n + 1); v := R.(n + 2);
     tox := hom< U`ring -> R | [ R.i : i in [1..n]] >;
     fromx := hom< R -> U`ring | [ U`ring | U`ring.i : i in [1..n]] cat [U`ring | 1, 0]  >;
@@ -132,7 +132,7 @@ intrinsic InitRK( f :: RngMPolElt : variant := { }, der := 1, r := 1, prof := re
 
   U`df := [ tox(Derivative(f, i)) : i in [1..n]];
   U`vars := [ R | tox(U`ring.i) : i in [1..n]];
-  
+
   U`gens := [ u^(n-i)*v^i : i in [0..n] ];
   xrels := [ u^i*v^(n+1-i) : i in [0..n+1] ];
 
@@ -144,7 +144,7 @@ intrinsic InitRK( f :: RngMPolElt : variant := { }, der := 1, r := 1, prof := re
 
   if assigned prof`tsyzlm then
     U`tsyzlm := [ Monomial(R, e) : e in prof`tsyzlm ];
-  else
+  elif r gt 1 then
     tsyz := Ideal([ U`df[i]*U`gens[1+j]-U`df[j]*U`gens[1+i] : i, j in [ 1..n ]] cat  xrels);
     vprintf User1 : "Computing syzygies... ";
     vtime User1 : U`tsyzlm := Basis(LeadingMonomialIdeal(tsyz));
@@ -184,7 +184,7 @@ end function;
 
 //intrinsic ExtProd( U :: Rec, a :: RngMPolElt ) -> RngMPolElt {}
 function ExtProd(U, a)
-  c := Coefficients(a, U`v);  
+  c := Coefficients(a, U`v);
   return c[1] + &+[ U`xring | U`df[i-1]*c[i]*U`u^(i-1) : i in [2..#c] ];
 end function;
 
@@ -197,7 +197,7 @@ end function;
  * Différents modes de réprésentation
  */
 
-function ERedStep( U, L0 ) 
+function ERedStep( U, L0 )
   if #L0 gt 0 then
     vprintf User1 : " --- Normalising %o elements of degree %o...  ", #L0, Maximum([Degree(p) : p in L0]);
   else
@@ -230,7 +230,7 @@ function ECastSyz( U, S )
   case U`repmode :
   when "R" : return dS;
   when "R:c": return [ U`emod | [ dS[i], S[i] ] : i in [1..#S]];
-  when "R:p" : return [ U`emod | [ 0, LeadingMonomial(S[i]), dS[i] ] : i in [1..#S]];  
+  when "R:p" : return [ U`emod | [ 0, LeadingMonomial(S[i]), dS[i] ] : i in [1..#S]];
   end case;
 end function;
 
@@ -238,7 +238,7 @@ function EEncode( U, L )
   case U`repmode :
   when "R" : return [ U`emod | U`tox(p)*U`gens[1] : p in L ];
   when "R:c" : return [ U`emod | U`tox(p)*U`gens[1]*U`emod.1 : p in L ];
-  when "R:p" : return [ U`emod | U`tox(p)*U`gens[1]*U`emod.3 : p in L ];  
+  when "R:p" : return [ U`emod | U`tox(p)*U`gens[1]*U`emod.3 : p in L ];
   end case;
 end function;
 
@@ -257,7 +257,7 @@ function EWeight(U, L )
   when "R:p": return Integers() ! Maximum([ Degree(p[3]) : p in L ]);
   end case;
 end function;
-  
+
 
 /****************
   * Coeur de l'algorithme
@@ -281,7 +281,7 @@ intrinsic BasisU( ~U :: Rec, r, q )
     U`basisWdown[<r,q>] := ECastSyz(U, syz);
     U`basisU[<r,q>] := [ U`emod | ];
   elif r gt 1 then
-    vprintf User1 : "Computing U for r = %o and q = %o. \n ", r, q; 
+    vprintf User1 : "Computing U for r = %o and q = %o. \n ", r, q;
     BasisU(~U, r-1, q);
     BasisU(~U, r-1, q+U`deg);
 
@@ -296,12 +296,14 @@ end intrinsic;
 
 
 procedure HomReduce_rec( ~U, ~L, r )
-  q := EWeight(U, L);  
+  q := EWeight(U, L);
   while q gt 0 do
     L := ERedStep(U, L);
 
-    BasisU(~U, r, q);
-    L := LinNormalForm_p(L, U`basisU[<r,q>], false);
+    if r gt 1 then
+        BasisU(~U, r, q);
+        L := LinNormalForm_p(L, U`basisU[<r,q>], false);
+    end if;
 
     q -:= U`deg;
   end while;
@@ -332,8 +334,8 @@ intrinsic ComputeGM(~U, der, L, ~ret)
 
   basis := [];
   gm := [];
-  xmons := Setseq(&join[ Seqset(Monomials(p)) : p in L ]);
-  
+  xmons := Setseq(&join[ Seqset(Monomials(p)) : p in proj ]);
+
   while #xmons gt 0 do
     Sort(~xmons);
     basis cat:= xmons;
@@ -345,20 +347,30 @@ intrinsic ComputeGM(~U, der, L, ~ret)
     end if;
     xmons := Setseq(&join[ Seqset(Monomials(p)) : p in nf ] diff Seqset(basis));
   end while;
-  
+
   ret := rec<RKGMfmt |  >;
-  
+
   ret`basis := basis;
 
   ret`gm := Matrix( CoefficientRing(U`ring), #basis, #basis,
     [ [ MonomialCoefficient(gm[j], basis[i]) : j in [1..#basis] ] : i in [1..#basis] ] );
-    
+
   ret`proj := Matrix( CoefficientRing(U`ring), #basis, #L,
     [ [ MonomialCoefficient(proj[j], basis[i]) : j in [1..#L] ] : i in [1..#basis] ] );
-    
+
   ret`ebasis := [ Exponents(m) : m in basis ];
 end intrinsic;
 
+
+intrinsic
+    CohomologyBasis(~U, ~basis) {}
+
+    mons := Monomials( (&+ GeneratorsSequence(U`ring))^(U`deg*(U`dim-1)-U`dim) );
+    HomReduce(~U, ~mons, U`r);
+
+    basis := Sort(Setseq(&join[ Seqset(Monomials(p)) : p in mons ]));
+
+end intrinsic;
 
 intrinsic ComputeProfile(~U)
   {}
@@ -372,5 +384,3 @@ intrinsic ComputeProfile(~U)
 
   end if;
 end intrinsic;
-
-

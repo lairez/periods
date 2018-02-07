@@ -97,6 +97,62 @@ intrinsic RatInterp(xs :: [], ys :: []) -> FldFunRatElt
 end intrinsic;
 
 
+intrinsic DenomRatInterp(xs :: [], ys :: []) -> FldFunRatElt
+          {}
+
+  if Characteristic(Universe(ys)) ne 0 then
+    return Denominator(RatInterp(xs, ys));
+  end if;
+
+  RH := RHnew();
+  prime_counter := 0;
+  IndentPush();
+  while not assigned RH`candidate do
+      modulo := RandomPrime(23);
+      if modulo in RH`points then continue; end if;
+      prime_counter +:= 1;
+
+      vprintf User2 : "Computing denominator modulo prime number %o (%o).\n  ", prime_counter, modulo;
+
+      Kev := GF(modulo);
+      xsev := ChangeUniverse(xs, Kev);
+      ysev := ChangeUniverse(ys, Kev);
+
+      cand := Denominator(RatInterp(xsev, ysev));
+      RHAddMod(~RH, cand, modulo);
+  end while;
+  IndentPop();
+
+  return RH`candidate;
+
+end intrinsic;
+
+
+intrinsic PolInterp(xs :: [], ys :: []) -> Any
+          {}
+
+   if Characteristic(Universe(ys)) ne 0 then
+       return Interpolation(xs, ys);
+   end if;
+
+   RH := RHnew();
+   IndentPush();
+   while not assigned RH`candidate do
+      modulo := RandomPrime(50);
+      if modulo in RH`points then continue; end if;
+      Kev := GF(modulo);
+      xsev := ChangeUniverse(xs, Kev);
+      ysev := ChangeUniverse(ys, Kev);
+      vprintf User2 : ".";
+      cand := Interpolation(xsev, ysev);
+      RHAddMod(~RH, cand, modulo);
+   end while;
+   IndentPop();
+
+   return RH`candidate;
+end intrinsic;
+
+
 intrinsic Deconstruct( a ) -> < >
   {}
 
@@ -216,37 +272,46 @@ intrinsic RHAddRat(~H, val, point : xkey := false)
   AppendToVal(~H`tests, key, <test, point>);
 
   all := H`tests[key];
+
+  // We don't always try to reconstruct.
+  if not Floor(Sqrt(#H`points))^2 eq #H`points  then
+      return;
+  end if;
+
+  vprintf User2 : "Testing reconstruction... \n";
+
+
   points := [ v[2] : v in all ];
-  
+
   recon := RatInterp(ChangeUniverse(points, Kev), [ v[1] : v in all ] );
 
   if IsDefined(H`recons, key) and H`recons[key] eq recon then
     if H`num gt -1 then
       all := H`vals[key];
       vprintf User2 : "Rational reconstruction of %o elements... ", #L;
-      den := Denominator(recon);
 
       cand := [];
+      den := 0;
       if Characteristic(Universe(L)) eq 0 then
-          vtime User2 : recon := RatInterp(points, [ &+[ all[i,1,j]*rand[j] : j in [1..#L] ] : i in [1..#points] ]);
-          vprintf User2 : "Got denominator... ";
+          vprintf User2 : "Reconstructing denominator... ";
+          vtime User2 : den := DenomRatInterp(points, [ &+[ all[i,1,j]*rand[j] : j in [1..#L] ] : i in [1..#points] ]);
+      else
+          den := Denominator(recon);
       end if;
 
-      den := Denominator(recon);
+      vprintf User2 : "Reconstructing numerators... ";
+      evden := [ Evaluate(den, p) : p in points ];
 
-//          cand := [ RatInterp( points, [ all[i, 1, j] : i in [1..#points] ] ) : j in [1..#L] ];
-  //    else
-          evden := [ Evaluate(den, p) : p in points ];
-          cand := [ Interpolation( points, [ evden[i]*all[i, 1, j] : i in [1..#points] ] )/den : j in [1..#L] ];
+      for j in [1..#L] do
+          vprintf User2 : "%o/%o ", j, #L;
+          vtime User2 : Append(~cand, Interpolation( points, [ evden[i]*all[i, 1, j] : i in [1..#points] ] )/den);
+      end for;
 
-    //  end if;
-          if Maximum([Degree(p) : p in cand]) gt 2/3*#points then
-              // Bad luck: the sampling is not good.
-              // This happens so rarely that we just throw away everything.
-              H := RHnew();
-          end if;
-
-
+      if Maximum([Degree(p) : p in cand]) gt 2/3*#points then
+            // Bad luck: the sampling is not good.
+            // This happens so rarely that we just throw away everything.
+            H := RHnew();
+       end if;
       H`candidate := Rebuild(cand, S);
     else
       H`num +:= 1;
@@ -263,7 +328,7 @@ intrinsic RHAddMod(~H, val, point : xkey := false)
   L, S := Explode(Deconstruct(val));
   key := <S, xkey>;
   Include(~H`points, point);
-  
+
   Li := ChangeUniverse(L, Integers());
 
   if IsDefined(H`vals, key) then
@@ -276,6 +341,11 @@ intrinsic RHAddMod(~H, val, point : xkey := false)
   end if;
   H`vals[key] := nval;
 
+  // We don't always try to reconstruct.
+  if not Floor(Sqrt(#H`points))^2 eq #H`points  then
+      return;
+  end if;
+
   Lm := ChangeUniverse(nval[1], ResidueClassRing(nval[2]));
   rec := [ RationalReconstruction(x) : x in Lm ];
   if forall{x : x in rec | x} then
@@ -286,7 +356,7 @@ intrinsic RHAddMod(~H, val, point : xkey := false)
     H`recons[key] := Lm;
   end if;
 
-  vprintf User2 : "%o percents of coefficients reconstructed (%o/%o). \n", Floor(100*done/#rec), done, #rec where done is #[ x : x in rec | x ];
+  vprintf User2 : "%o percents of coefficients reconstructed (%o/%o). \n", Floor(100*(1+done)/(1+#rec)), done, #rec where done is #[ x : x in rec | x ];
 end intrinsic;
   
 
