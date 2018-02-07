@@ -195,7 +195,8 @@ intrinsic RHAddRat(~H, val, point : xkey := false)
   L, S := Explode(Deconstruct(val));
   key := <S, xkey>;
   Include(~H`points, point);
-  
+
+  rand := [];
   if IsDefined(H`rand, key) then
     rand := H`rand[key];
   else
@@ -222,17 +223,29 @@ intrinsic RHAddRat(~H, val, point : xkey := false)
   if IsDefined(H`recons, key) and H`recons[key] eq recon then
     if H`num gt -1 then
       all := H`vals[key];
-      vprintf User2 : "Rational reconstruction of %o elements...", #L;
+      vprintf User2 : "Rational reconstruction of %o elements... ", #L;
       den := Denominator(recon);
-      evden := [ Evaluate(den, p) : p in points ];
-      //cand := [ RatInterp( points, [ all[i, 1, j] : i in [1..#points] ] ) : j in [1..#L] ];
-      cand := [ Interpolation( points, [ evden[i]*all[i, 1, j] : i in [1..#points] ] )/den : j in [1..#L] ];
 
-      if Maximum([Degree(p) : p in cand]) gt 2/3*#points then
-        // Bad luck: the sampling is not good.
-        // This happens so rarely that we just throw away everything.
-        H := RHnew();
+      cand := [];
+      if Characteristic(Universe(L)) eq 0 then
+          vtime User2 : recon := RatInterp(points, [ &+[ all[i,1,j]*rand[j] : j in [1..#L] ] : i in [1..#points] ]);
+          vprintf User2 : "Got denominator... ";
       end if;
+
+      den := Denominator(recon);
+
+//          cand := [ RatInterp( points, [ all[i, 1, j] : i in [1..#points] ] ) : j in [1..#L] ];
+  //    else
+          evden := [ Evaluate(den, p) : p in points ];
+          cand := [ Interpolation( points, [ evden[i]*all[i, 1, j] : i in [1..#points] ] )/den : j in [1..#L] ];
+
+    //  end if;
+          if Maximum([Degree(p) : p in cand]) gt 2/3*#points then
+              // Bad luck: the sampling is not good.
+              // This happens so rarely that we just throw away everything.
+              H := RHnew();
+          end if;
+
 
       H`candidate := Rebuild(cand, S);
     else

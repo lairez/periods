@@ -50,7 +50,7 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
   point_counter := 0;
   while not assigned RH`candidate do
     if modulo eq 0 then
-        ipoint := ipoint + 1;
+        ipoint := Kev ! ( ipoint + 1 );
     else
         ipoint := Random(Kev);
     end if;
