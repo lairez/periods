@@ -115,11 +115,16 @@ intrinsic DenomRatInterp(xs :: [], ys :: []) -> FldFunRatElt
       vprintf User2 : "Computing denominator modulo prime number %o (%o).\n  ", prime_counter, modulo;
 
       Kev := GF(modulo);
-      xsev := ChangeUniverse(xs, Kev);
-      ysev := ChangeUniverse(ys, Kev);
 
-      cand := Denominator(RatInterp(xsev, ysev));
-      RHAddMod(~RH, cand, modulo);
+      try
+          xsev := ChangeUniverse(xs, Kev);
+          ysev := ChangeUniverse(ys, Kev);
+          cand := Denominator(RatInterp(xsev, ysev));
+          RHAddMod(~RH, cand, modulo);
+      catch e
+          vprintf User2 : "Reduction modulo a bad prime";
+      end try;
+
   end while;
   IndentPop();
 
