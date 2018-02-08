@@ -52,8 +52,31 @@ end intrinsic;
 
 
 
+function issmooth(f)
+    return Dimension(Eltseq(JacobianMatrix([f]))) eq 0;
+end function;
 
+intrinsic DeformationSeq(f0, f1 : randomize := false) -> Any {}
+    A := Parent(f0);
 
+    terms := Terms(f1) cat Terms(-f0);
+
+    if randomize then
+        randl := [Random(100000) : i in terms];
+        ParallelSort(~randl, ~terms);
+    end if;
+
+    L := [f0];
+    cur := f0;
+    for i in [1..#terms] do
+        cur +:= terms[i];
+        if issmooth(cur) then
+            Append(~L, cur);
+        end if;
+    end do;
+
+    return L;
+end intrinsic;
 
 
 
