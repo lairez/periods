@@ -12,7 +12,7 @@
 
 
 intrinsic
-    GaussManinLin(f0, f1, basis : r := 1, variant := {}) -> Any, Any {}
+    GaussManinLin(f0, f1 : r := 1, variant := {}) -> Any, Any {}
 
     RH := RHnew();
 
@@ -25,35 +25,22 @@ intrinsic
         point_counter +:= 1;
         vprintf User2 : "Computing connexion at point number %o (%o)... ", point_counter, ipoint ;
 
-      //try
         U := InitRK((1-ipoint)*f0 + ipoint*f1 : variant := variant, r := r);
-        vtime User2 : ComputeGM(~U, f1-f0, basis, ~gm);
+        vtime User2 : ComputeGM(~U, f1-f0, [U`ring | ], ~gm : fullbasis := true);
 
-        mat := gm`proj^(-1)*gm`gm*gm`proj;
+        RHAddRat(~RH, gm`gm, ipoint : xkey := gm`ebasis);
 
-        RHAddRat(~RH, mat, ipoint : xkey := gm`ebasis);
-      /*catch e
-          if e`Object eq "r_toosmall" then
-              rtoosmall +:= 1;
-              if rtoosmall ge 9 then
-                  vprintf User2 : "r is too small, raising error";
-                  error Error("r_toosmall");
-              end if;
-          else
-              error e;
-          end if;
-      end try;*/
     end while;
     IndentPop();
 
-    return RH`candidate;
+    return RH`candidate, gm`basis;
 
 end intrinsic;
 
 
 
 function issmooth(f)
-    return Dimension(Eltseq(JacobianMatrix([f]))) eq 0;
+    return Dimension(Ideal(Eltseq(JacobianMatrix([f])))) eq 0;
 end function;
 
 intrinsic DeformationSeq(f0, f1 : randomize := false) -> Any {}
@@ -73,7 +60,7 @@ intrinsic DeformationSeq(f0, f1 : randomize := false) -> Any {}
         if issmooth(cur) then
             Append(~L, cur);
         end if;
-    end do;
+    end for;
 
     return L;
 end intrinsic;
