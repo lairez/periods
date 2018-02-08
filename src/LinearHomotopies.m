@@ -10,31 +10,94 @@
  **/
 
 
+/*
 
+mat : Matrix with univariate polynomials coefficients
+den : univariate polynomial
+genbasis : basis of the cohomology of V(f_t)
+basis : basis of the cohomology of V(f_0)
+proj : matrix with univariate polynomials coefficients
+
+den * genbasis' = mat * genbasis
+proj * basis = genbasis
+
+*/
+
+GMLfmt := recformat< mat, den, proj, ini, basis, genbasis, inimat >;
 intrinsic
-    GaussManinLin(f0, f1 : r := 1, variant := {}) -> Any, Any {}
+    GaussManinLin(f0, f1 : r := 1, variant := {}, projection := false) -> Rec {}
 
     RH := RHnew();
 
+    Ustart := InitRK(f0 : variant := variant, r := r);
+    ComputeCohomologyBasis(~Ustart);
+
     ipoint := CoefficientRing(Parent(f0)) ! 100;
     point_counter := 0;
+    gm := 0;
+    genbasis := 0;
 
     IndentPush();
     while not assigned RH`candidate do
         ipoint +:= 1;
         point_counter +:= 1;
-        vprintf User2 : "Computing connexion at point number %o (%o)... ", point_counter, ipoint ;
+        vprintf User2 : "Computing connection at point number %o (%o)... ", point_counter, ipoint ;
 
         U := InitRK((1-ipoint)*f0 + ipoint*f1 : variant := variant, r := r);
-        vtime User2 : ComputeGM(~U, f1-f0, [U`ring | ], ~gm : fullbasis := true);
 
-        RHAddRat(~RH, gm`gm, ipoint : xkey := gm`ebasis);
+        ComputeCohomologyBasis(~U);
+        genbasis := U`basis;
+        ebasis := [Exponents(m):m in U`basis];
 
+        gm := [ -(f1-f0)*p : p in U`basis ];
+        vtime User2 : HomReduceMatrix(~U, ~gm, ~gmmat);
+
+        if projection then
+            projinv := Ustart`basis;
+            HomReduceMatrix(~U, ~projinv, ~projinvmat);
+            RHAddRat(~RH, [* gmmat, projinvmat *], ipoint : xkey := ebasis, denom := true);
+        else
+            RHAddRat(~RH, [* gmmat *], ipoint : xkey := ebasis, denom := true);
+        end if;
     end while;
     IndentPop();
 
-    return RH`candidate, gm`basis;
+    den := RH`candidate[2];
+    mat := RH`candidate[1][1];
 
+    clist := Eltseq(den) cat &cat[Eltseq(c) : c in Eltseq(mat)];
+    clist := [Denominator(c) : c in clist];
+    iden := LCM(clist);
+
+    ret := rec<GMLfmt |
+              den := iden*den,
+              mat := iden*mat,
+              basis := Ustart`basis,
+              genbasis := genbasis
+              >;
+
+    if projection then
+        projinv := RH`candidate[1][2];
+        ret`proj := Matrix(#genbasis, #genbasis, [p/den : p in Eltseq(projinv)])^(-1);
+    end if;
+
+    ini := [];
+    inimat := [];
+
+    k := -1;
+    vprintf User2 : "Evaluating formal initial conditions... \n";
+    repeat
+        k := k+1;
+        L := [ (-f1+f0)^k*p : p in genbasis ];
+        Lmat := 0;
+        vtime User2 : HomReduceMatrix(~Ustart, ~L, ~Lmat);
+        Append(~ini, L);
+        Append(~inimat, Lmat);
+    until Coefficient(den, k) ne 0;
+
+    ret`ini := ini;
+    ret`inimat := inimat;
+    return ret;
 end intrinsic;
 
 
@@ -64,6 +127,10 @@ intrinsic DeformationSeq(f0, f1 : randomize := false) -> Any {}
 
     return L;
 end intrinsic;
+
+
+
+
 
 
 

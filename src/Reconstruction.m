@@ -250,7 +250,7 @@ procedure AppendToVal(~aa, key, val)
   end if;
 end procedure;
 
-intrinsic RHAddRat(~H, val, point : xkey := false)
+intrinsic RHAddRat(~H, val, point : xkey := false, denom := true)
   {}
 
   L, S := Explode(Deconstruct(val));
@@ -309,15 +309,19 @@ intrinsic RHAddRat(~H, val, point : xkey := false)
 
       for j in [1..#L] do
           vprintf User2 : "%o/%o ", j, #L;
-          vtime User2 : Append(~cand, Interpolation( points, [ evden[i]*all[i, 1, j] : i in [1..#points] ] )/den);
+          Append(~cand, Interpolation( points, [ evden[i]*all[i, 1, j] : i in [1..#points] ] ));
       end for;
 
       if Maximum([Degree(p) : p in cand]) gt 2/3*#points then
             // Bad luck: the sampling is not good.
             // This happens so rarely that we just throw away everything.
             H := RHnew();
-       end if;
-      H`candidate := Rebuild(cand, S);
+      end if;
+      if denom then
+          H`candidate := [* Rebuild(cand, S), den *];
+      else
+          H`candidate := Rebuild([p/den : p in cand], S);
+      end if;
     else
       H`num +:= 1;
     end if;
