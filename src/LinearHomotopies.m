@@ -18,8 +18,8 @@ genbasis : basis of the cohomology of V(f_t)
 basis : basis of the cohomology of V(f_0)
 proj : matrix with univariate polynomials coefficients
 
-den * genbasis' = mat * genbasis
-proj * basis = genbasis
+den * genbasis' = genbasis * mat
+basis * proj = genbasis
 
 */
 
