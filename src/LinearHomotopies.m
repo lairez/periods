@@ -23,7 +23,7 @@ basis * proj = genbasis
 
 */
 
-GMLfmt := recformat< mat, den, proj, ini, basis, genbasis, inimat >;
+GMLfmt := recformat< f0, f1, mat, den, proj, ini, basis, genbasis, inimat >;
 intrinsic
     GaussManinLin(f0, f1 : r := 1, variant := {}, projection := false) -> Rec {}
 
@@ -70,6 +70,7 @@ intrinsic
     iden := LCM(clist);
 
     ret := rec<GMLfmt |
+              f0 := f0, f1 := f1,
               den := iden*den,
               mat := iden*mat,
               basis := Ustart`basis,
@@ -128,6 +129,62 @@ intrinsic DeformationSeq(f0, f1 : randomize := false) -> Any {}
     return L;
 end intrinsic;
 
+
+procedure AppendJSON(~ret, elt : quote := false)
+    if ISA(Type(elt), SeqEnum) then
+        Append(~ret, "[ ");
+        for i in [1..#elt-1] do
+            AppendJSON(~ret, elt[i] : quote := quote);
+            Append(~ret, ", ");
+        end for;
+        if #elt gt 0 then
+            AppendJSON(~ret, elt[#elt] : quote := quote);
+        end if;
+        Append(~ret, " ]");
+    elif ISA(Type(elt), RngUPolElt) then
+        AppendJSON(~ret, Eltseq(elt) : quote := quote);
+    elif ISA(Type(elt), Mtrx) then
+        AppendJSON(~ret, RowSequence(elt) : quote := quote);
+    elif quote then
+        Append(~ret, Sprintf("\"%o\"\n", elt));
+    else
+        Append(~ret, Sprint(elt));
+    end if;
+end procedure;
+
+intrinsic
+    JSONOutput(file, gm) {}
+
+    degree := Degree(gm`f0);
+    ret := ["{\n"];
+    Append(~ret, Sprintf("\"degree\": %o,\n", degree));
+    Append(~ret, "\"vars\": "); AppendJSON(~ret, GeneratorsSequence(Parent(gm`f0)) : quote := true); Append(~ret, ",\n");
+    Append(~ret, Sprintf("\"f0\": \"%o\",\n", gm`f0));
+    Append(~ret, Sprintf("\"f1\": \"%o\",\n", gm`f1));
+
+    fermatpol := &+[ MonomialCoefficient(gm`f0, v^degree)*v^degree : v in GeneratorsSequence(Parent(gm`f0)) ];
+    if fermatpol eq gm`f0 then
+        Append(~ret, "\"isfermat\": true,\n");
+        Append(~ret, Sprintf("\"fermatcoeffs\": %o,\n", CoefficientsAndMonomials(gm`f0)));
+    else;
+        Append(~ret, "\"isfermat\": false,\n");
+    end if;
+
+    Append(~ret, Sprintf("\"basis\": %o,\n", [Exponents(m) : m in gm`basis]));
+    Append(~ret, Sprintf("\"genbasis\": %o,\n", [Exponents(m) : m in gm`genbasis]));
+
+    Append(~ret, "\"gm\": "); AppendJSON(~ret, gm`mat : quote := true); Append(~ret, ",\n");
+    Append(~ret, "\"inicond\": "); AppendJSON(~ret, gm`inimat : quote := true); Append(~ret, ",\n");
+    Append(~ret, "\"singpol\": "); AppendJSON(~ret, gm`den : quote := true);
+
+    Append(~ret, "\n}\n");
+
+    f := Open(file, "w");
+    for s in ret do
+        Put(f, s);
+    end for;
+
+end intrinsic;
 
 
 
