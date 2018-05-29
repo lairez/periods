@@ -289,7 +289,36 @@ end intrinsic;
 //////////////////////// CYCLIC EQUATION
 
 
+
+
 MDer := func< m | Matrix(BaseRing(m), NumberOfRows(m), NumberOfColumns(m), [Derivative(p) : p in Eltseq(m)]) >;
+
+
+function LeftKernelInterp(M)
+
+    Kt<t> := BaseRing(M);
+    K := CoefficientRing(Kt);
+
+    RH := RHnew();
+    ipoint := 100;
+
+    while not assigned RH`candidate do
+        if Characteristic(K) eq 0 then
+            ipoint := K ! ipoint + 1;
+        else
+            ipoint := Random(K);
+        end if;
+        ev := hom<Kt -> K | ipoint>;
+        if ipoint in RH`points then continue; end if;
+
+        ker := Basis(NullSpace(ChangeRing(M, ev)));
+        RHAddRat(~RH, ker, ipoint : denom := true);
+
+    end while;
+
+    return RH`candidate[1];
+
+end function;
 
 // Old version
 intrinsic CyclicEquation(M :: Mtrx, v : theta := false) -> Any
@@ -299,10 +328,14 @@ intrinsic CyclicEquation(M :: Mtrx, v : theta := false) -> Any
 
   Kt<t> := BaseRing(M);
   K0 := CoefficientRing(Kt);
+
   if Characteristic(K0) eq 0 then
-    error "Not implemented, use with care";
+      Kev := GF(RandomPrime(23));
+  else
+      Kev := K0;
   end if;
-  ev := hom< Kt -> K0 |  Random(K0) >;
+
+  ev := hom< Kt -> Kev | Random(Kev) >;
 
   A := [v]; Aev := ChangeRing(v, ev);
   counter := 1;
@@ -315,8 +348,9 @@ intrinsic CyclicEquation(M :: Mtrx, v : theta := false) -> Any
   until Rank(Aev) lt #A;
 
   m := Transpose(HorizontalJoin(Reverse(A)));
+  ker := LeftKernelInterp(m);
 
-  return Reverse(Eltseq(Basis(NullSpace(m))[1]));
+  return Reverse(Eltseq(ker[1]));
 end intrinsic;
 
 

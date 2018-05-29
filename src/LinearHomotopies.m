@@ -15,7 +15,7 @@
 mat : Matrix with univariate polynomials coefficients
 den : univariate polynomial
 genbasis : basis of the cohomology of V(f_t)
-basis : basis of the cohomology of V(f_0)
+basis : basis of the cohomology of V(f_0), or a basis given by user
 proj : matrix with univariate polynomials coefficients
 
 den * genbasis' = genbasis * mat
@@ -25,12 +25,16 @@ basis * proj = genbasis
 
 GMLfmt := recformat< f0, f1, mat, den, proj, ini, basis, genbasis, inimat >;
 intrinsic
-    GaussManinLin(f0, f1 : r := 1, variant := {}, projection := false) -> Rec {}
+    GaussManinLin(f0, f1 : basis := [], r := 1, variant := {}) -> Rec {}
 
     RH := RHnew();
 
     Ustart := InitRK(f0 : variant := variant, r := r);
     ComputeCohomologyBasis(~Ustart);
+    mybasis := basis;
+    if #mybasis eq 0 then
+        mybasis := Ustart`basis;
+    end if;
 
     ipoint := CoefficientRing(Parent(f0)) ! 100;
     point_counter := 0;
@@ -52,13 +56,9 @@ intrinsic
         gm := [ -(f1-f0)*p : p in U`basis ];
         vtime User2 : HomReduceMatrix(~U, ~gm, ~gmmat);
 
-        if projection then
-            projinv := Ustart`basis;
-            HomReduceMatrix(~U, ~projinv, ~projinvmat);
-            RHAddRat(~RH, [* gmmat, projinvmat *], ipoint : xkey := ebasis, denom := true);
-        else
-            RHAddRat(~RH, [* gmmat *], ipoint : xkey := ebasis, denom := true);
-        end if;
+        projinv := mybasis;
+        HomReduceMatrix(~U, ~projinv, ~projinvmat);
+        RHAddRat(~RH, [* gmmat, projinvmat *], ipoint : xkey := ebasis, denom := true);
     end while;
     IndentPop();
 
@@ -73,17 +73,19 @@ intrinsic
               f0 := f0, f1 := f1,
               den := iden*den,
               mat := iden*mat,
-              basis := Ustart`basis,
+              basis := mybasis,
               genbasis := genbasis
               >;
 
-    if projection then
-        projinv := RH`candidate[1][2];
-        ret`proj := Matrix(#genbasis, #genbasis, [p/den : p in Eltseq(projinv)])^(-1);
-    end if;
+    projinv := RH`candidate[1][2];
+    ret`proj := Matrix(#genbasis, #genbasis, [p/den : p in Eltseq(projinv)])^(-1);
 
     ini := [];
     inimat := [];
+
+    L := mybasis;
+    Tmat := 0;
+    HomReduceMatrix(~Ustart, ~L, ~Tmat);
 
     k := -1;
     vprintf User2 : "Evaluating formal initial conditions... \n";
@@ -92,14 +94,35 @@ intrinsic
         L := [ (-f1+f0)^k*p : p in genbasis ];
         Lmat := 0;
         vtime User2 : HomReduceMatrix(~Ustart, ~L, ~Lmat);
-        Append(~ini, L);
-        Append(~inimat, Lmat);
+        /* Append(~ini, L); */
+        Append(~inimat, Tmat^(-1)*Lmat);
     until Coefficient(den, k) ne 0;
 
-    ret`ini := ini;
+    /* ret`ini := ini; */
     ret`inimat := inimat;
     return ret;
 end intrinsic;
+
+
+
+intrinsic ScalarEquations(gm) -> Any {}
+
+     RR := BaseRing(gm`proj);
+     KK := FieldOfFractions(RR);
+
+     M := ChangeRing(gm`mat, KK)/gm`den;
+     P := gm`proj^(-1);
+
+     ceqs := [];
+     for i := 1 to NumberOfColumns(P) do
+         ceq := CyclicEquation(M, ColumnSubmatrixRange(P, i,i));
+         Append(~ceqs, ceq);
+     end for;
+
+     return ceqs;
+end intrinsic;
+
+
 
 
 

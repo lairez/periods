@@ -34,7 +34,7 @@ intrinsic GaussManin(f, r, L : modulo := 0, variant := {}, prof := rec< RKprof |
   if modulo eq 0 then
       Kev := CoefficientRing(K);
   else
-    Kev := GF(modulo);
+      Kev := GF(modulo);
   end if;
 
   B := PolynomialRing(Kev, dim, "grevlex");
@@ -167,7 +167,7 @@ intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := 
 
     vprintf User2 : "Computing Picard-Fuchs equation modulo prime number %o (%o).\n  ", prime_counter, modulo;
 
-    /* try */
+    try
       vtime User2 : rec, profile := GaussManin(R[1], r, [ R[2] ] : modulo := modulo, variant := variant, prof := profile);
       vprintf User2 : "Computing linear relation... ";
 
@@ -175,18 +175,18 @@ intrinsic PicardFuchs(R, r : modsize := 23, name := "t", variant := {}, prof := 
       vprintf User2 : "Found an equation of order %o and degree %o.\n", #deq-1, Maximum([Maximum([Degree(Numerator(p)), Degree(Denominator(p))]) : p in deq]);
 
       RHAddMod(~RH, deq, modulo);
-    /* catch e */
-    /*   vprintf User2 : e`Object; */
-    /*   if e`Object eq "r_toosmall" then */
-    /*     rtoosmall +:= 1; */
-    /*     if rtoosmall ge 3 then */
-    /*       vprintf User2 : "r is too small, raising error"; */
-    /*       error Error("r_toosmall"); */
-    /*     end if; */
-    /*   else */
-    /*     error e; */
-    /*   end if; */
-      /* end try; */
+    catch e
+      vprintf User2 : e`Object;
+      if e`Object eq "r_toosmall" then
+        rtoosmall +:= 1;
+        if rtoosmall ge 3 then
+          vprintf User2 : "r is too small, raising error";
+          error Error("r_toosmall");
+        end if;
+      else
+        error e;
+      end if;
+  end try;
 
   end while;
   IndentPop();
