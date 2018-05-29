@@ -292,7 +292,7 @@ end intrinsic;
 MDer := func< m | Matrix(BaseRing(m), NumberOfRows(m), NumberOfColumns(m), [Derivative(p) : p in Eltseq(m)]) >;
 
 // Old version
-intrinsic CyclicEquation(M, v : theta := false) -> Any
+intrinsic CyclicEquation(M :: Mtrx, v : theta := false) -> Any
   {}
 
   n := NumberOfRows(M);
@@ -333,7 +333,7 @@ end function;
 //         v a vector with coefficients in k(t)
 //      M represents a connection D on the space k(t)^n
 // output : the minimal operator L(t, D) such that L(v) = 0
-intrinsic CyclicEquation2(M, v : theta := false) -> Any
+intrinsic CyclicEquation2(M :: Mtrx, v : theta := false) -> Any
   {Returns the minimum annihilating differential operator.}
 
   n := NumberOfRows(M);
