@@ -78,7 +78,7 @@ intrinsic
               >;
 
     proj := RH`candidate[1][2];
-    ret`proj := Matrix(#genbasis, #genbasis, [p/den : p in Eltseq(proj)]);
+    ret`proj := Matrix(#genbasis, #mybasis, [p/den : p in Eltseq(proj)]);
 
     ini := [];
     inimat := [];
