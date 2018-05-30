@@ -19,7 +19,7 @@ basis : basis of the cohomology of V(f_0), or a basis given by user
 proj : matrix with univariate polynomials coefficients
 
 den * genbasis' = genbasis * mat
-basis * proj = genbasis
+basis = genbasis * proj
 
 */
 
@@ -56,9 +56,9 @@ intrinsic
         gm := [ -(f1-f0)*p : p in U`basis ];
         vtime User2 : HomReduceMatrix(~U, ~gm, ~gmmat);
 
-        projinv := mybasis;
-        HomReduceMatrix(~U, ~projinv, ~projinvmat);
-        RHAddRat(~RH, [* gmmat, projinvmat *], ipoint : xkey := ebasis, denom := true);
+        proj := mybasis;
+        HomReduceMatrix(~U, ~proj, ~projmat);
+        RHAddRat(~RH, [* gmmat, projmat *], ipoint : xkey := ebasis, denom := true);
     end while;
     IndentPop();
 
@@ -77,8 +77,8 @@ intrinsic
               genbasis := genbasis
               >;
 
-    projinv := RH`candidate[1][2];
-    ret`proj := Matrix(#genbasis, #genbasis, [p/den : p in Eltseq(projinv)])^(-1);
+    proj := RH`candidate[1][2];
+    ret`proj := Matrix(#genbasis, #genbasis, [p/den : p in Eltseq(proj)]);
 
     ini := [];
     inimat := [];
@@ -111,7 +111,7 @@ intrinsic ScalarEquations(gm) -> Any {}
      KK := FieldOfFractions(RR);
 
      M := ChangeRing(gm`mat, KK)/gm`den;
-     P := gm`proj^(-1);
+     P := gm`proj;
 
      ceqs := [];
      for i := 1 to NumberOfColumns(P) do

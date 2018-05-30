@@ -45,7 +45,7 @@ time gm := GaussManinLin(f0, f1);
 
 They satisfy :
     den * genbasis' = genbasis * mat
-    basis * proj = genbasis
+    basis = genbasis * proj
 */
 
 // Compute scalar differential equations for each entries of the basis.
@@ -54,14 +54,15 @@ time deqs := ScalarEquations(gm);
 
 
 // Consistency check : two different ways of computing the initial conditions
-K<t> := CoefficientRing(gm`proj);
+projinv := gm`proj^(-1);
+K<t> := CoefficientRing(projinv);
 ev0 := hom<K -> Rationals() | 0 >;
 
-dproj := Matrix(21, 21, [Derivative(p) : p in Eltseq(gm`proj)]);
+dproj := Matrix(21, 21, [Derivative(p) : p in Eltseq(projinv)]);
 
-gm`inimat[1] - ChangeRing(gm`proj, ev0);
-gm`inimat[2] - ChangeRing(gm`proj*gm`mat/gm`den, ev0);
-M2 := gm`proj*gm`mat^2/gm`den^2 + gm`proj*(MDer(gm`mat)*gm`den - Derivative(gm`den)*gm`mat)/gm`den^2;
+gm`inimat[1] - ChangeRing(projinv, ev0);
+gm`inimat[2] - ChangeRing(projinv*gm`mat/gm`den, ev0);
+M2 := projinv*gm`mat^2/gm`den^2 + projinv*(MDer(gm`mat)*gm`den - Derivative(gm`den)*gm`mat)/gm`den^2;
 gm`inimat[3] - ChangeRing(M2, ev0);
 
 /////////////////////////////////////////
