@@ -116,6 +116,7 @@ intrinsic ScalarEquations(gm) -> Any {}
 
      ceqs := [];
      for i := 1 to NumberOfColumns(P) do
+         vprintf User2 : "Computing ODE %o/%o... \n", i, NumberOfColumns(P) ;
          ceq := CyclicEquation(M, ColumnSubmatrixRange(P, i,i));
          Append(~ceqs, ceq);
      end for;
