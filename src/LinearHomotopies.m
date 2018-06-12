@@ -23,9 +23,9 @@ basis = genbasis * proj
 
 */
 
-GMLfmt := recformat< f0, f1, mat, den, proj, ini, basis, genbasis, inimat >;
+GMLfmt := recformat< f0, f1, mat, den, proj, ini, basis, genbasis, inimat, name >;
 intrinsic
-    GaussManinLin(f0, f1 : basis := [], r := 1, variant := {}) -> Rec {}
+    GaussManinLin(f0, f1 : basis := [], r := 1, variant := {}, name := "") -> Rec {}
 
     RH := RHnew();
 
@@ -45,7 +45,7 @@ intrinsic
     while not assigned RH`candidate do
         ipoint +:= 1;
         point_counter +:= 1;
-        vprintf User2 : "Computing connection at point number %o (%o)... ", point_counter, ipoint ;
+        vprintf User2 : "Computing connection at point number %o (%o) in family \"%o\... ", point_counter, ipoint, gm`name;
 
         U := InitRK((1-ipoint)*f0 + ipoint*f1 : variant := variant, r := r);
 
@@ -74,7 +74,8 @@ intrinsic
               den := iden*den,
               mat := iden*mat,
               basis := mybasis,
-              genbasis := genbasis
+              genbasis := genbasis,
+              name := name
               >;
 
     proj := RH`candidate[1][2];
@@ -116,7 +117,7 @@ intrinsic ScalarEquations(gm) -> Any {}
 
      ceqs := [];
      for i := 1 to NumberOfColumns(P) do
-         vprintf User2 : "Computing ODE %o/%o... \n", i, NumberOfColumns(P) ;
+         vprintf User2 : "Computing ODE %o/%o in family \"%o\"... \n", i, NumberOfColumns(P), gm`name ;
          ceq := CyclicEquation(M, ColumnSubmatrixRange(P, i,i));
          Append(~ceqs, ceq);
      end for;
