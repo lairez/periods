@@ -321,7 +321,9 @@ intrinsic Periods(f : r := 1, variant := {}, onlyprep := false) -> Any
     end try;
   until assigned deq;
 
-  dop<D> := PolynomialRing(Universe(deq));
+  K<t> := Universe(deq);
+  dop<D> := PolynomialRing(K);
+
   return dop ! deq;
 end intrinsic;
 

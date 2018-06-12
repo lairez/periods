@@ -80,26 +80,27 @@ intrinsic
     proj := RH`candidate[1][2];
     ret`proj := Matrix(#genbasis, #mybasis, [p/den : p in Eltseq(proj)]);
 
-    ini := [];
-    inimat := [];
 
-    L := mybasis;
-    Tmat := 0;
-    HomReduceMatrix(~Ustart, ~L, ~Tmat);
+    /* ini := []; */
+    /* inimat := []; */
 
-    k := -1;
-    vprintf User2 : "Evaluating formal initial conditions... \n";
-    repeat
-        k := k+1;
-        L := [ (-f1+f0)^k*p : p in genbasis ];
-        Lmat := 0;
-        vtime User2 : HomReduceMatrix(~Ustart, ~L, ~Lmat);
-        /* Append(~ini, L); */
-        Append(~inimat, Tmat^(-1)*Lmat);
-    until Coefficient(den, k) ne 0;
+    /* L := mybasis; */
+    /* Tmat := 0; */
+    /* HomReduceMatrix(~Ustart, ~L, ~Tmat); */
 
-    /* ret`ini := ini; */
-    ret`inimat := inimat;
+    /* k := -1; */
+    /* vprintf User2 : "Evaluating formal initial conditions... \n"; */
+    /* repeat */
+    /*     k := k+1; */
+    /*     L := [ (-f1+f0)^k*p : p in genbasis ]; */
+    /*     Lmat := 0; */
+    /*     vtime User2 : HomReduceMatrix(~Ustart, ~L, ~Lmat); */
+    /*     /\* Append(~ini, L); *\/ */
+    /*     Append(~inimat, Tmat^(-1)*Lmat); */
+    /* until Coefficient(den, k) ne 0; */
+
+    /* /\* ret`ini := ini; *\/ */
+    /* ret`inimat := inimat; */
     return ret;
 end intrinsic;
 

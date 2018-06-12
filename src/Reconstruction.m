@@ -279,11 +279,11 @@ intrinsic RHAddRat(~H, val, point : xkey := false, denom := true)
   all := H`tests[key];
 
   // We don't always try to reconstruct.
-  if not Floor(Sqrt(#H`points))^2 eq #H`points  then
+  if not Floor(Sqrt(#H`points))^2 eq #H`points and not Floor(Sqrt(3*#H`points))^2 eq 3*#H`points  then
       return;
   end if;
 
-  vprintf User2 : "Testing reconstruction... \n";
+  vprintf User2 : "Testing reconstruction... ";
 
 
   points := [ v[2] : v in all ];
@@ -351,7 +351,7 @@ intrinsic RHAddMod(~H, val, point : xkey := false)
   H`vals[key] := nval;
 
   // We don't always try to reconstruct.
-  if not Floor(Sqrt(#H`points))^2 eq #H`points  then
+  if #H`points gt 10 and not Floor(Sqrt(#H`points-5))^2 eq #H`points - 5  then
       return;
   end if;
 
