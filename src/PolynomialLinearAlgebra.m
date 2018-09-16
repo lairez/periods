@@ -321,7 +321,7 @@ function LeftKernelInterp(M)
 end function;
 
 // Old version
-intrinsic CyclicEquation(M :: Mtrx, v : theta := false) -> Any
+intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
   {}
 
   n := NumberOfRows(M);
@@ -338,15 +338,17 @@ intrinsic CyclicEquation(M :: Mtrx, v : theta := false) -> Any
   ev := hom< Kt -> Kev | Random(Kev) >;
 
   A := [v]; Aev := ChangeRing(v, ev);
-  counter := 1;
+  u := v;
+  counter := 0;
   vprint User2: "Trying order... ";
   repeat
-      vprintf User2: "%o... ", counter;
-    v := MDer(v) + M*v;
-    if theta then v *:= t; end if;
-    Append(~A, v);
-    Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
-    counter +:= 1;
+      vprintf User2: "%o... ", counter+1;
+      vtime User2 : u := den*MDer(u)-counter*Derivative(den)+M*u;
+      v := u/den^(counter+1);
+      if theta then v *:= t; end if;
+      Append(~A, v);
+      Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
+      counter +:= 1;
   until Rank(Aev) lt #A;
 
   vprintf User2: "OK. \n";
