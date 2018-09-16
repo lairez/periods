@@ -379,7 +379,7 @@ intrinsic CyclicEquation2(M :: Mtrx, v : theta := false) -> Any
   if v eq 0 then
     return [ CoefficientRing(Parent(v)) | 1];
   end if;
-i
+
   Kt<t> := BaseRing(M);
   K0 := CoefficientRing(Kt);
   if Characteristic(K0) eq 0 then
