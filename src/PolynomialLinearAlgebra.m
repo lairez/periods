@@ -344,7 +344,7 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
   vprint User2: "Trying order... ";
   repeat
       vprintf User2: "%o... ", counter+1;
-      vtime User2 : v := den*MDer(v)-counter*Derivative(den)+M*v;
+      vtime User2 : v := den*MDer(v)-counter*Derivative(den)*v+M*v;
       // v := u/den^(counter+1);
       if theta then v *:= t; end if;
       Append(~A, v);
