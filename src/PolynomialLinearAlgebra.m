@@ -327,6 +327,7 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
   n := NumberOfRows(M);
 
   Kt<t> := BaseRing(M);
+  Krat := Parent(1/t);
   K0 := CoefficientRing(Kt);
 
   if Characteristic(K0) eq 0 then
@@ -343,8 +344,8 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
   vprint User2: "Trying order... ";
   repeat
       vprintf User2: "%o... ", counter+1;
-      vtime User2 : u := den*MDer(u)-counter*Derivative(den)+M*u;
-      v := u/den^(counter+1);
+      vtime User2 : v := den*MDer(v)-counter*Derivative(den)+M*v;
+      // v := u/den^(counter+1);
       if theta then v *:= t; end if;
       Append(~A, v);
       Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
@@ -356,7 +357,9 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
   m := Transpose(HorizontalJoin(Reverse(A)));
   ker := LeftKernelInterp(m);
 
-  return Reverse(Eltseq(ker[1]));
+
+  ret := Reverse(Eltseq(ker[1]));
+  return [ret[k]*den^(k-1) : k in [1..#ret]];
 end intrinsic;
 
 
