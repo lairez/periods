@@ -10,29 +10,41 @@
  **/
 
 
+
 /*
+
+Input :
+polynomials f0 and f1.
+basis can be "generic", "start"
+//pols is a list of polynomials.
+
+Output :
 
 mat : Matrix with univariate polynomials coefficients
 den : univariate polynomial
 genbasis : basis of the cohomology of V(f_t)
-basis : basis of the cohomology of V(f_0), or a basis given by user
+startbasis : basis of the cohomology of V(f_0)
+
 proj : matrix with univariate polynomials coefficients
 
-den * genbasis' = genbasis * mat
-basis = genbasis * proj
+den * B' = B * mat
+//pols = B * proj
+
+where B = genbasis or startbasis, depending on the parameter `basis`.
+
 
 */
 
-GMLfmt := recformat< f0, f1, mat, den, proj, ini, basis, genbasis, inimat, name >;
+GMLfmt := recformat< f0, f1, mat, den, startbasis, genbasis, name >;
 intrinsic
-    GaussManinLin(f0, f1 : basis := [], r := 1, variant := {}, name := "") -> Rec {}
+    GaussManinLin(f0, f1 : basis := "generic", r := 1, variant := {}, name := "") -> Rec {}
 
     RH := RHnew();
 
-    Ustart := InitRK(f0 : variant := variant, r := r);
-    ComputeCohomologyBasis(~Ustart);
-    mybasis := basis;
-    if #mybasis eq 0 then
+    mybasis := [];
+    if basis eq "start" then
+        Ustart := InitRK(f0 : variant := variant, r := r);
+        ComputeCohomologyBasis(~Ustart);
         mybasis := Ustart`basis;
     end if;
 
@@ -45,7 +57,7 @@ intrinsic
     while not assigned RH`candidate do
         ipoint +:= 1;
         point_counter +:= 1;
-        vprintf User2 : "Computing connection at point number %o (%o) in family \"%o\... ", point_counter, ipoint, gm`name;
+        vprintf User2 : "Computing connection at point number %o (%o) in family \"%o\... ", point_counter, ipoint, name;
 
         U := InitRK((1-ipoint)*f0 + ipoint*f1 : variant := variant, r := r);
 
@@ -53,17 +65,31 @@ intrinsic
         genbasis := U`basis;
         ebasis := [Exponents(m):m in U`basis];
 
-        gm := [ -(f1-f0)*p : p in U`basis ];
+        thebasis := [];
+        if basis eq "start" then
+            thebasis := mybasis;
+        else
+            thebasis := U`basis;
+        end if;
+
+        gm := [ -(f1-f0)*p : p in thebasis ];
         vtime User2 : HomReduceMatrix(~U, ~gm, ~gmmat);
 
-        proj := mybasis;
-        HomReduceMatrix(~U, ~proj, ~projmat);
-        RHAddRat(~RH, [* gmmat, projmat *], ipoint : xkey := ebasis, denom := true);
+
+        tocompute := 0;
+        if basis eq "generic" then
+            tocompute := gmmat;
+        else
+            HomReduceMatrix(~U, ~thebasis, ~thebasismat);
+            tocompute := thebasismat^(-1)*gmmat;
+        end if;
+
+        RHAddRat(~RH, tocompute, ipoint : xkey := ebasis, denom := true);
     end while;
     IndentPop();
 
     den := RH`candidate[2];
-    mat := RH`candidate[1][1];
+    mat := RH`candidate[1];
 
     clist := Eltseq(den) cat &cat[Eltseq(c) : c in Eltseq(mat)];
     clist := [Denominator(c) : c in clist];
@@ -73,13 +99,18 @@ intrinsic
               f0 := f0, f1 := f1,
               den := iden*den,
               mat := iden*mat,
-              basis := mybasis,
               genbasis := genbasis,
               name := name
               >;
 
-    proj := RH`candidate[1][2];
-    ret`proj := Matrix(#genbasis, #mybasis, [p/den : p in Eltseq(proj)]);
+    if #mybasis gt 0 then
+        ret`startbasis := mybasis;
+    end if;
+
+
+
+    //proj := RH`candidate[1][2];
+    //ret`proj := Matrix(#genbasis, #mybasis, [p/den : p in Eltseq(proj)]);
 
 
     /* ini := []; */
@@ -107,25 +138,38 @@ end intrinsic;
 
 
 
-intrinsic ScalarEquations(gm) -> Any {}
+intrinsic ScalarEquationOfCoordinate(gm, i) -> Any {}
+     M := gm`mat*(1/gm`den);
+     vec := Matrix(NumberOfColumns(M), 1, [CoefficientRing(M) | 0 : i in [1..NumberOfColumns(M)]]);
+     vec[i,1] := 1;
 
-     RR := BaseRing(gm`proj);
-     KK := FieldOfFractions(RR);
+     vprintf User2 : "Computing ODE... \n" ;
+     ceq := CyclicEquation(M, vec);
 
-     M := ChangeRing(gm`mat, KK)/gm`den;
-     P := gm`proj;
-
-     ceqs := [];
-     for i := 1 to NumberOfColumns(P) do
-         vprintf User2 : "Computing ODE %o/%o in family \"%o\"... \n", i, NumberOfColumns(P), gm`name ;
-         ceq := CyclicEquation(M, ColumnSubmatrixRange(P, i,i));
-         Append(~ceqs, ceq);
-     end for;
-
-     return ceqs;
+     return ceq;
 end intrinsic;
 
+MDer := func< m | Matrix(BaseRing(m), NumberOfRows(m), NumberOfColumns(m), [Derivative(p) : p in Eltseq(m)]) >;
 
+intrinsic InitialConditionsOfCoordinate(gm, i, rk) -> Any {}
+
+    M := gm`mat*(1/gm`den);
+    vec := Matrix(NumberOfColumns(M), 1, [CoefficientRing(M) | 0 : i in [1..NumberOfColumns(M)]]);
+    vec[i,1] := 1;
+
+    K := CoefficientRing(M);
+    Kev := CoefficientRing(K);
+    ev0 := hom< K -> Kev | 0 >;
+
+    vecs := [vec];
+    repeat
+        vec := M*vec + MDer(vec);
+        Append(~vecs, vec);
+        ini := Matrix([ChangeRing(v, Kev, ev0) : v in vecs]);
+    until Rank(ini) eq rk;
+
+    return ini;
+end intrinsic;
 
 
 
@@ -156,7 +200,7 @@ intrinsic DeformationSeq(f0, f1 : randomize := false) -> Any {}
 end intrinsic;
 
 
-procedure AppendJSON(~ret, elt : quote := false)
+intrinsic AppendJSON(~ret, elt : quote := true) {}
     if ISA(Type(elt), SeqEnum) then
         Append(~ret, "[ ");
         for i in [1..#elt-1] do
@@ -166,20 +210,50 @@ procedure AppendJSON(~ret, elt : quote := false)
         if #elt gt 0 then
             AppendJSON(~ret, elt[#elt] : quote := quote);
         end if;
-        Append(~ret, " ]");
+        Append(~ret, " ]\n");
+    elif ISA(Type(elt), Assoc) then
+        Append(~ret, "{ ");
+        cnt := 0;
+        ks := Keys(elt);
+        for k in ks do
+            cnt := cnt+1;
+            Append(~ret, Sprintf("\"%o\":", k));
+            AppendJSON(~ret, elt[k] : quote := quote);
+            if cnt lt #ks then
+                Append(~ret, ",\n");
+            end if;
+        end for;
+        Append(~ret, " }");
     elif ISA(Type(elt), RngUPolElt) then
         AppendJSON(~ret, Eltseq(elt) : quote := quote);
     elif ISA(Type(elt), Mtrx) then
         AppendJSON(~ret, RowSequence(elt) : quote := quote);
     elif quote then
-        Append(~ret, Sprintf("\"%o\"\n", elt));
+        Append(~ret, Sprintf("\"%o\"", elt));
     else
         Append(~ret, Sprint(elt));
     end if;
-end procedure;
+end intrinsic;
+
+
 
 intrinsic
-    JSONOutput(file, gm) {}
+    JSONOutput(file, elt) {}
+
+    ret := [];
+    AppendJSON(~ret, elt);
+
+    f := Open(file, "w");
+    for s in ret do
+        Put(f, s);
+    end for;
+
+end intrinsic;
+
+
+
+intrinsic
+    gmJSONOutput(file, gm) {}
 
     degree := Degree(gm`f0);
     ret := ["{\n"];
