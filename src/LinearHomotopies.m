@@ -170,7 +170,7 @@ intrinsic InitialConditionsOfCoordinate(gm, i) -> Any {}
         ini := Matrix([ChangeRing(v, Kev, ev0) : v in vecs]);
     until Rank(ini) lt #vecs;
 
-    return ini;
+    return [Eltseq(r) : r in Rows(ini)];
 end intrinsic;
 
 
