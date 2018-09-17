@@ -47,7 +47,7 @@ intrinsic
         ComputeCohomologyBasis(~Ustart);
         mybasis := Ustart`basis;
     elif Type(basis) eq SeqEnum then
-        mybasis := userbasis;
+        mybasis := basis;
     end if;
 
     ipoint := CoefficientRing(Parent(f0)) ! 100;
