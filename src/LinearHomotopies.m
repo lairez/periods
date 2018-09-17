@@ -23,7 +23,7 @@ Output :
 mat : Matrix with univariate polynomials coefficients
 den : univariate polynomial
 genbasis : basis of the cohomology of V(f_t)
-startbasis : basis of the cohomology of V(f_0)
+basis : basis of the cohomology of V(f_0) if basis="start", or the given basis.
 
 proj : matrix with univariate polynomials coefficients
 
@@ -35,7 +35,7 @@ where B = genbasis or startbasis, depending on the parameter `basis`.
 
 */
 
-GMLfmt := recformat< f0, f1, mat, den, startbasis, genbasis, name >;
+GMLfmt := recformat< f0, f1, mat, den, basis, genbasis, name >;
 intrinsic
     GaussManinLin(f0, f1 : basis := "generic", r := 1, variant := {}, name := "") -> Rec {}
 
@@ -46,6 +46,8 @@ intrinsic
         Ustart := InitRK(f0 : variant := variant, r := r);
         ComputeCohomologyBasis(~Ustart);
         mybasis := Ustart`basis;
+    elif Type(basis) eq SeqEnum then
+        mybasis := userbasis;
     end if;
 
     ipoint := CoefficientRing(Parent(f0)) ! 100;
@@ -104,7 +106,7 @@ intrinsic
               >;
 
     if #mybasis gt 0 then
-        ret`startbasis := mybasis;
+        ret`basis := mybasis;
     end if;
 
 
@@ -249,45 +251,5 @@ intrinsic
     end for;
 
 end intrinsic;
-
-
-
-intrinsic
-    gmJSONOutput(file, gm) {}
-
-    degree := Degree(gm`f0);
-    ret := ["{\n"];
-    Append(~ret, Sprintf("\"degree\": %o,\n", degree));
-    Append(~ret, "\"vars\": "); AppendJSON(~ret, GeneratorsSequence(Parent(gm`f0)) : quote := true); Append(~ret, ",\n");
-    Append(~ret, Sprintf("\"f0\": \"%o\",\n", gm`f0));
-    Append(~ret, Sprintf("\"f1\": \"%o\",\n", gm`f1));
-
-    fermatpol := &+[ MonomialCoefficient(gm`f0, v^degree)*v^degree : v in GeneratorsSequence(Parent(gm`f0)) ];
-    if fermatpol eq gm`f0 then
-        Append(~ret, "\"isfermat\": true,\n");
-        Append(~ret, Sprintf("\"fermatcoeffs\": %o,\n", CoefficientsAndMonomials(gm`f0)));
-    else;
-        Append(~ret, "\"isfermat\": false,\n");
-    end if;
-
-    Append(~ret, Sprintf("\"basis\": %o,\n", [Exponents(m) : m in gm`basis]));
-    Append(~ret, Sprintf("\"genbasis\": %o,\n", [Exponents(m) : m in gm`genbasis]));
-
-    Append(~ret, "\"gm\": "); AppendJSON(~ret, gm`mat : quote := true); Append(~ret, ",\n");
-    Append(~ret, "\"inicond\": "); AppendJSON(~ret, gm`inimat : quote := true); Append(~ret, ",\n");
-    Append(~ret, "\"singpol\": "); AppendJSON(~ret, gm`den : quote := true);
-
-    Append(~ret, "\n}\n");
-
-    f := Open(file, "w");
-    for s in ret do
-        Put(f, s);
-    end for;
-
-end intrinsic;
-
-
-
-
 
 
