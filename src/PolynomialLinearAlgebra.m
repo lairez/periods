@@ -321,7 +321,7 @@ function LeftKernelInterp(M)
 end function;
 
 // Old version
-intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
+intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false, maxorder:= 100) -> Any
   {}
 
   n := NumberOfRows(M);
@@ -350,6 +350,9 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false) -> Any
       Append(~A, v);
       Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
       counter +:= 1;
+      if counter gt maxorder then
+          error Error("max order reached");
+      end if;
   until Rank(Aev) lt #A;
 
   vprintf User2: "OK. \n";
