@@ -141,12 +141,12 @@ end intrinsic;
 
 
 intrinsic ScalarEquationOfCoordinate(gm, i : maxorder := 100) -> Any {}
-     M := gm`mat ; //*(1/gm`den);
+     M := gm`mat*(1/gm`den);
      vec := Matrix(NumberOfColumns(M), 1, [CoefficientRing(M) | 0 : i in [1..NumberOfColumns(M)]]);
      vec[i,1] := 1;
 
      vprintf User2 : "Computing ODE... \n" ;
-     ceq := CyclicEquation(M, vec, gm`den : maxorder:=maxorder);
+     ceq := CyclicEquation(M, vec : maxorder:=maxorder);
 
      return ceq;
 end intrinsic;

@@ -321,7 +321,7 @@ function LeftKernelInterp(M)
 end function;
 
 // Old version
-intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false, maxorder:= 100) -> Any
+intrinsic CyclicEquation(M :: Mtrx, v : theta := false, maxorder:= 100) -> Any
   {}
 
   n := NumberOfRows(M);
@@ -339,20 +339,17 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false, maxorder:= 100) -> 
   ev := hom< Kt -> Kev | Random(Kev) >;
 
   A := [v]; Aev := ChangeRing(v, ev);
-  u := v;
-  counter := 0;
   vprint User2: "Trying order... ";
   repeat
-      vprintf User2: "%o... ", counter+1;
-      vtime User2 : v := den*MDer(v)-counter*Derivative(den)*v+M*v;
-      // v := u/den^(counter+1);
+      if #A ge maxorder then
+          error Error("max order reached");
+      end if;
+      vprintf User2: "%o... ", #A;
+      //vtime User2 : v := den*MDer(v)-counter*Derivative(den)*v+M*v;
+      vtime User2 : v := MDer(v) + M*v;
       if theta then v *:= t; end if;
       Append(~A, v);
       Aev := HorizontalJoin(ChangeRing(v, ev), Aev);
-      counter +:= 1;
-      if counter gt maxorder then
-          error Error("max order reached");
-      end if;
   until Rank(Aev) lt #A;
 
   vprintf User2: "OK. \n";
@@ -361,8 +358,7 @@ intrinsic CyclicEquation(M :: Mtrx, v, den : theta := false, maxorder:= 100) -> 
   ker := LeftKernelInterp(m);
 
 
-  ret := Reverse(Eltseq(ker[1]));
-  return [ret[k]*den^(k-1) : k in [1..#ret]];
+  return Reverse(Eltseq(ker[1]));
 end intrinsic;
 
 
