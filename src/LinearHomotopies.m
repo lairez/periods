@@ -153,7 +153,7 @@ end intrinsic;
 
 MDer := func< m | Matrix(BaseRing(m), NumberOfRows(m), NumberOfColumns(m), [Derivative(p) : p in Eltseq(m)]) >;
 
-intrinsic InitialConditionsOfCoordinate(gm, i) -> Any {}
+intrinsic InitialConditionsOfCoordinate(gm, i, order) -> Any {}
 
     M := gm`mat*(1/gm`den);
     vec := Matrix(NumberOfColumns(M), 1, [CoefficientRing(M) | 0 : i in [1..NumberOfColumns(M)]]);
@@ -168,7 +168,7 @@ intrinsic InitialConditionsOfCoordinate(gm, i) -> Any {}
         vec := M*vec + MDer(vec);
         Append(~vecs, vec);
         ini := Matrix([ChangeRing(v, Kev, ev0) : v in vecs]);
-    until Rank(ini) lt #vecs;
+    until Rank(ini) ge order;
 
     return [Eltseq(r) : r in Rows(ini)];
 end intrinsic;
