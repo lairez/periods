@@ -235,7 +235,7 @@ intrinsic Rebuild( a, b ) -> Any
 end intrinsic;
 
 
-RHfmt := recformat< vals, recons, tests, candidate, num, points, rand >;
+RHfmt := recformat< vals, recons, tests, candidate, num, points, rand, counter, nbticks >;
 intrinsic RHnew() -> Rec
   {}
 
