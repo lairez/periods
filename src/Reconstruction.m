@@ -239,7 +239,7 @@ RHfmt := recformat< vals, recons, tests, candidate, num, points, rand >;
 intrinsic RHnew() -> Rec
   {}
 
-  return rec< RHfmt | vals := AssociativeArray(), recons := AssociativeArray(), tests := AssociativeArray(), rand := AssociativeArray(), num := 0, points := {} >;
+  return rec< RHfmt | vals := AssociativeArray(), recons := AssociativeArray(), tests := AssociativeArray(), rand := AssociativeArray(), num := 0, points := {}, counter := 1, nbticks := 1 >;
 end intrinsic;
 
 procedure AppendToVal(~aa, key, val)
@@ -279,9 +279,12 @@ intrinsic RHAddRat(~H, val, point : xkey := false, denom := true)
   all := H`tests[key];
 
   // We don't always try to reconstruct.
-  if not Floor(Sqrt(#H`points))^2 eq #H`points and not Floor(Sqrt(3*#H`points))^2 eq 3*#H`points  then
+  H`nbticks := H`nbticks - 1;
+  if H`nbticks gt 0 then
       return;
   end if;
+  H`counter := H`counter + 4;
+  H`nbticks := H`counter;
 
   vprintf User2 : "Testing reconstruction... ";
 
@@ -350,10 +353,12 @@ intrinsic RHAddMod(~H, val, point : xkey := false)
   end if;
   H`vals[key] := nval;
 
-  // We don't always try to reconstruct.
-  if #H`points gt 10 and not Floor(Sqrt(#H`points-5))^2 eq #H`points - 5  then
+  H`nbticks := H`nbticks - 1;
+  if H`nbticks gt 0 then
       return;
   end if;
+  H`counter := H`counter + 1;
+  H`nbticks := H`counter;
 
   Lm := ChangeUniverse(nval[1], ResidueClassRing(nval[2]));
   rec := [ RationalReconstruction(x) : x in Lm ];
