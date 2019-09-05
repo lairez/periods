@@ -190,13 +190,13 @@ intrinsic Rebuild( a, b ) -> Any
 
   case b[1] :
   when "seq":
-    L := [];
+    L := [* *];
     acc := 0;
     for i in [1..#b[2]] do
       Append(~L, Rebuild( a[acc+1..acc+b[2,i,1]], b[2,i,2]));
       acc +:= b[2,i,1];
     end for;
-    return L;
+    return [x : x in L];
   when "list":
     L := [* *];
     acc := 0;
