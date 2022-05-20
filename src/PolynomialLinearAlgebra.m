@@ -311,8 +311,12 @@ function LeftKernelInterp(M)
         ev := hom<Kt -> K | ipoint>;
         if ipoint in RH`points then continue; end if;
 
-        ker := Basis(NullSpace(ChangeRing(M, ev)));
-        RHAddRat(~RH, ker, ipoint : denom := true);
+        try
+            ker := Basis(NullSpace(ChangeRing(M, ev)));
+            RHAddRat(~RH, ker, ipoint : denom := true);
+        catch e
+            vprintf User2 : "Reduction modulo a bad prime";
+        end try;
 
     end while;
 
